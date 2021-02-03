@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:overlay_support/overlay_support.dart';
@@ -6,6 +7,7 @@ import 'package:water_taxi_miami/theme/style.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(App());
 }
 

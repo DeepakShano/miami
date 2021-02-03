@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:water_taxi_miami/auth_service.dart';
+import 'package:water_taxi_miami/global.dart';
 
 class SignUpScreen extends StatelessWidget {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _formKey = GlobalKey<FormState>();
+
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -43,7 +47,9 @@ class SignUpScreen extends StatelessWidget {
                 width: MediaQuery.of(context).size.width,
                 child: RaisedButton(
                   child: Text('Sign Up'),
-                  onPressed: () {},
+                  onPressed: () {
+                    _onPressPrimaryBtn(context);
+                  },
                   textColor: Colors.white,
                 ),
               ),
@@ -56,7 +62,7 @@ class SignUpScreen extends StatelessWidget {
                 child: FlatButton(
                   child: Text('Go Back'),
                   onPressed: () {
-                   Navigator.pop(context);
+                    Navigator.pop(context);
                   },
                   textColor: Theme.of(context).primaryColor,
                 ),
@@ -70,78 +76,112 @@ class SignUpScreen extends StatelessWidget {
   }
 
   Widget signUpForm(BuildContext context) {
-
     final node = FocusScope.of(context);
 
     return Form(
+      key: _formKey,
       child: Column(
         children: [
-          TextField(
+          TextFormField(
             controller: _firstNameController,
             textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
               hintText: 'Full Name',
-              focusedBorder: OutlineInputBorder(
+              border: OutlineInputBorder(
                 borderSide: BorderSide(
                   color: Theme.of(context).primaryColor,
-                  width: 1,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).hintColor,
                   width: 1,
                 ),
               ),
             ),
             textInputAction: TextInputAction.next,
             onEditingComplete: () => node.nextFocus(),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'This field cannot be empty';
+              }
+              return null;
+            },
           ),
           SizedBox(height: 20),
-          TextField(
+          TextFormField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
               hintText: 'Phone Number',
-              focusedBorder: OutlineInputBorder(
+              border: OutlineInputBorder(
                 borderSide: BorderSide(
                   color: Theme.of(context).primaryColor,
-                  width: 1,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).hintColor,
                   width: 1,
                 ),
               ),
             ),
             textInputAction: TextInputAction.next,
             onEditingComplete: () => node.nextFocus(),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'This field cannot be empty';
+              }
+              return null;
+            },
           ),
           SizedBox(height: 20),
-          TextField(
+          TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
               hintText: 'Email Address',
-              focusedBorder: OutlineInputBorder(
+              border: OutlineInputBorder(
                 borderSide: BorderSide(
                   color: Theme.of(context).primaryColor,
-                  width: 1,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).hintColor,
                   width: 1,
                 ),
               ),
             ),
             textInputAction: TextInputAction.done,
-            onSubmitted: (_) => node.unfocus(),
+            onEditingComplete: () => node.unfocus(),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'This field cannot be empty';
+              } else if (!RegExp(
+                      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                  .hasMatch(value)) {
+                return 'Enter a valid email address';
+              }
+              return null;
+            },
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _onPressPrimaryBtn(BuildContext context) async {
+    if (!_formKey.currentState.validate()) {
+      logger.d('Invalid form submission');
+      return;
+    }
+
+    // Sign up user
+    await AuthService.signUpUser(
+      _firstNameController.text,
+      _phoneController.text,
+      _emailController.text,
+    );
+
+    _formKey.currentState.reset();
+
+    _scaffoldKey.currentState.showSnackBar(
+      SnackBar(
+        content: Text('Sign up request is sent to Admin.'),
+        backgroundColor: Colors.green,
+        action: SnackBarAction(
+          label: 'OKAY',
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+        duration: Duration(seconds: 5),
       ),
     );
   }
