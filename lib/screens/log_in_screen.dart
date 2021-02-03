@@ -1,12 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:pin_input_text_field/pin_input_text_field.dart';
+import 'package:provider/provider.dart';
+import 'package:water_taxi_miami/models/app_user.dart';
+import 'package:water_taxi_miami/providers/app_user_provider.dart';
 import 'package:water_taxi_miami/screens/dashboard_screen.dart';
 import 'package:water_taxi_miami/screens/sign_up_screen.dart';
 
+import '../auth_service.dart';
+import '../global.dart';
+
 class LogInScreen extends StatelessWidget {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  final TextEditingController _pinController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -40,6 +51,7 @@ class LogInScreen extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: PinInputTextField(
+                controller: _pinController,
                 pinLength: 4,
                 decoration: BoxLooseDecoration(
                   bgColorBuilder: PinListenColorBuilder(
@@ -68,10 +80,7 @@ class LogInScreen extends StatelessWidget {
                 child: RaisedButton(
                   child: Text('Sign In'),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => DashboardScreen()),
-                    );
+                    _onPressPrimaryBtn(context);
                   },
                   textColor: Colors.white,
                 ),
@@ -99,5 +108,37 @@ class LogInScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _onPressPrimaryBtn(BuildContext context) async {
+    if (_pinController.text == null || _pinController.text.length != 4) {
+      logger.d('Invalid form submission');
+      _scaffoldKey.currentState.showSnackBar(
+        SnackBar(
+          content: Text('Enter your 4 digit pin code'),
+          backgroundColor: Theme.of(context).errorColor,
+        ),
+      );
+      return;
+    }
+
+    // Sign up user
+    AppUser user =
+        await AuthService.loginUser(_pinController.text).catchError((error) {
+      if (error.runtimeType == String) {
+        _scaffoldKey.currentState.showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: Theme.of(context).errorColor,
+          ),
+        );
+      }
+    });
+
+    if (user != null) {
+      context.read<AppUserProvider>().appUser = user;
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => DashboardScreen()));
+    }
   }
 }

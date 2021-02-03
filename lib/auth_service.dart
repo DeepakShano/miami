@@ -3,8 +3,14 @@ import 'package:water_taxi_miami/models/app_user.dart';
 import 'package:water_taxi_miami/services/database_service.dart';
 
 class AuthService {
-  static Future<bool> loginUser(String pinCode) {
-    return Future.delayed(Duration(seconds: 2), () => true);
+  static Future<AppUser> loginUser(String pinCode) {
+    return FirestoreDBService.logInUser(pinCode).then((value) {
+      if (value == null) {
+        return Future.error('PIN Code did not match. Enter a valid code');
+      }
+
+      return value;
+    });
   }
 
   static Future<AppUser> signUpUser(

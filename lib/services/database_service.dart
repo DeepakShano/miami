@@ -57,6 +57,20 @@ class FirestoreDBService {
         .then((value) => appUser);
   }
 
+  static Future<AppUser> logInUser(String pinCode) {
+    return FirebaseFirestore.instance
+        .collection('UserInfo')
+        .where('userPin', isEqualTo: pinCode)
+        .get()
+        .then((querySnapshot) {
+      if (querySnapshot.size == 0) {
+        return null;
+      }
+
+      return AppUser.fromJson(querySnapshot.docs.first.data());
+    });
+  }
+
   static Stream<List<TaxiDetail>> streamTaxiDetails() {
     return FirebaseFirestore.instance
         .collection('TaxiDetail')

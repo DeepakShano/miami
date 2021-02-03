@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
 import 'package:overlay_support/overlay_support.dart';
 import 'package:provider/provider.dart';
+import 'package:water_taxi_miami/providers/app_user_provider.dart';
 import 'package:water_taxi_miami/providers/taxi_provider.dart';
 import 'package:water_taxi_miami/screens/log_in_screen.dart';
 import 'package:water_taxi_miami/theme/style.dart';
@@ -21,6 +22,10 @@ class App extends StatelessWidget {
     return OverlaySupport(
       child: MultiProvider(
         providers: [
+          ChangeNotifierProvider<AppUserProvider>(
+            builder: (context, child) => child,
+            create: (_) => AppUserProvider(),
+          ),
           ChangeNotifierProvider<TaxiProvider>(
             builder: (context, child) => child,
             create: (_) => TaxiProvider(),
