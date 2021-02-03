@@ -1,4 +1,5 @@
 class TaxiDetail {
+  String id;
   int totalSeats;
   String ticketPrice;
   List<String> weekEndStartTiming;
@@ -6,9 +7,9 @@ class TaxiDetail {
   List<String> weekDayStartTiming;
   List<String> weekEndReturnTiming;
   List<String> weekDayReturnTiming;
-  String id;
 
   TaxiDetail({
+    this.id,
     this.totalSeats,
     this.ticketPrice,
     this.weekEndStartTiming,
@@ -16,7 +17,6 @@ class TaxiDetail {
     this.weekDayStartTiming,
     this.weekEndReturnTiming,
     this.weekDayReturnTiming,
-    this.id,
   });
 
   TaxiDetail.fromJson(Map<String, dynamic> json) {

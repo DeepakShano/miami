@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:water_taxi_miami/components/app_drawer.dart';
+import 'package:water_taxi_miami/components/taxi_expansion_panel.dart';
+import 'package:water_taxi_miami/models/taxi_detail.dart';
+import 'package:water_taxi_miami/providers/taxi_provider.dart';
 import 'package:water_taxi_miami/screens/message_screen.dart';
-import 'package:water_taxi_miami/screens/return_time_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   @override
@@ -31,69 +34,23 @@ class DashboardScreen extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(height: 40),
-            ExpansionPanelList(
-              expansionCallback: (int index, bool isExpanded) {},
-              children: [
-                ExpansionPanel(
-                  headerBuilder: (BuildContext context, bool isExpanded) {
-                    return ListTile(
-                      title: Text(
-                        'DAILY DEPARTURES Mon, Tue, Wed, Thu, Fri',
-                        style: Theme.of(context).textTheme.subtitle1,
-                      ),
-                    );
-                  },
-                  body: ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: 4,
-                    itemBuilder: (context, index) {
-                      return InkWell(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => ReturnTimeScreen()),
-                          );
-                        },
-                        child: ListTile(
-                          title: Text('1:30 PM'),
-                          subtitle: Text(
-                            'Departure Time',
-                            style: Theme.of(context).textTheme.caption,
-                          ),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '34 left',
-                                style: Theme.of(context).textTheme.caption,
-                              ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: Theme.of(context).primaryColor,
-                              )
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  isExpanded: true,
-                ),
-                ExpansionPanel(
-                  headerBuilder: (BuildContext context, bool isExpanded) {
-                    return ListTile(
-                      title: Text('WEEKEND SCHEDULE Sat, Sun'),
-                    );
-                  },
-                  body: ListTile(
-                    title: Text('Item 2 child'),
-                    subtitle: Text('Details goes here'),
-                  ),
-                  isExpanded: false,
-                ),
-              ],
+            Consumer<TaxiProvider>(
+              builder: (context, value, child) {
+                List<TaxiDetail> taxiDetails = value.taxis;
+
+                if (taxiDetails == null || taxiDetails.isEmpty) {
+                  return Center(
+                    child: Text('No taxis available'),
+                  );
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: TaxiExpansionPanelList(taxiDetails: taxiDetails),
+                );
+              },
             ),
+            SizedBox(height: 16),
           ],
         ),
       ),

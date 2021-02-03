@@ -42,7 +42,7 @@ class Booking {
     adult = json['adult'];
     bookingDateTimeStamp = json['bookingDateTimeStamp'] == null
         ? null
-        : DateTime.parse(json['bookingDateTimeStamp']);
+        : json['bookingDateTimeStamp']?.toDate();
     tripReturnTime = json['tripReturnTime'];
     email = json['email'];
     customerPhone = json['customePhone'];

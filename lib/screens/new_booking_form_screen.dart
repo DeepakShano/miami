@@ -1,14 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:uuid/uuid.dart';
+import 'package:water_taxi_miami/models/booking.dart';
+import 'package:water_taxi_miami/screens/ticket_booked_screen.dart';
+import 'package:water_taxi_miami/services/database_service.dart';
 
-enum BookingType {
-  NEW_BOOKING,
-  UPDATE_BOOKING,
+import '../global.dart';
+
+class NewBookingFormScreen extends StatefulWidget {
+  final String taxiId;
+  final String selectedDepartTime;
+  final String selectedReturnTime;
+
+  NewBookingFormScreen({
+    Key key,
+    @required this.selectedDepartTime,
+    @required this.selectedReturnTime,
+    @required this.taxiId,
+  }) : super(key: key);
+
+  @override
+  _NewBookingFormScreenState createState() => _NewBookingFormScreenState();
 }
 
-class BookingFormScreen extends StatelessWidget {
-  final BookingType bookingType;
-
-  BookingFormScreen({Key key, this.bookingType}) : super(key: key);
+class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -20,15 +37,33 @@ class BookingFormScreen extends StatelessWidget {
   final TextEditingController _returnTimeController = TextEditingController();
 
   @override
+  void initState() {
+    if (widget.selectedDepartTime != null) {
+      _departureTimeController.text = widget.selectedDepartTime;
+    }
+
+    if (widget.selectedReturnTime != null) {
+      _returnTimeController.text = widget.selectedReturnTime;
+    }
+
+    if (DEBUG) {
+      _nameController.text = 'Test';
+      _phoneController.text = '9895952623';
+      _emailController.text = 'a@a.a';
+      _minorCountController.text = '5';
+      _adultCountController.text = '5';
+    }
+
+    super.initState();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         centerTitle: true,
-        title: Text(
-          bookingType == BookingType.NEW_BOOKING
-              ? 'New Booking'
-              : 'Update Booking',
-        ),
+        title: Text('New Booking'),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -41,7 +76,9 @@ class BookingFormScreen extends StatelessWidget {
                 width: MediaQuery.of(context).size.width,
                 child: RaisedButton(
                   child: Text('Submit'),
-                  onPressed: () {},
+                  onPressed: () {
+                    _onPressPrimaryBtn(context);
+                  },
                   textColor: Colors.white,
                 ),
               ),
@@ -57,6 +94,7 @@ class BookingFormScreen extends StatelessWidget {
     final node = FocusScope.of(context);
 
     return Form(
+      key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -65,26 +103,26 @@ class BookingFormScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyText2,
           ),
           SizedBox(height: 10),
-          TextField(
+          TextFormField(
             controller: _nameController,
             textCapitalization: TextCapitalization.words,
             decoration: InputDecoration(
               hintText: 'Full Name',
-              focusedBorder: OutlineInputBorder(
+              border: OutlineInputBorder(
                 borderSide: BorderSide(
                   color: Theme.of(context).primaryColor,
-                  width: 1,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).hintColor,
                   width: 1,
                 ),
               ),
             ),
             textInputAction: TextInputAction.next,
             onEditingComplete: () => node.nextFocus(),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'This field cannot be empty';
+              }
+              return null;
+            },
           ),
           SizedBox(height: 20),
           Text(
@@ -92,26 +130,26 @@ class BookingFormScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyText2,
           ),
           SizedBox(height: 10),
-          TextField(
+          TextFormField(
             controller: _phoneController,
             keyboardType: TextInputType.phone,
             decoration: InputDecoration(
               hintText: 'Phone Number',
-              focusedBorder: OutlineInputBorder(
+              border: OutlineInputBorder(
                 borderSide: BorderSide(
                   color: Theme.of(context).primaryColor,
-                  width: 1,
-                ),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).hintColor,
                   width: 1,
                 ),
               ),
             ),
             textInputAction: TextInputAction.next,
             onEditingComplete: () => node.nextFocus(),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'This field cannot be empty';
+              }
+              return null;
+            },
           ),
           SizedBox(height: 20),
           Text(
@@ -119,26 +157,30 @@ class BookingFormScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyText2,
           ),
           SizedBox(height: 10),
-          TextField(
+          TextFormField(
             controller: _emailController,
             keyboardType: TextInputType.emailAddress,
             decoration: InputDecoration(
               hintText: 'Email',
-              focusedBorder: OutlineInputBorder(
+              border: OutlineInputBorder(
                 borderSide: BorderSide(
                   color: Theme.of(context).primaryColor,
                   width: 1,
                 ),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).hintColor,
-                  width: 1,
-                ),
-              ),
             ),
             textInputAction: TextInputAction.done,
-            onSubmitted: (_) => node.unfocus(),
+            onEditingComplete: () => node.unfocus(),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'This field cannot be empty';
+              } else if (!RegExp(
+                      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                  .hasMatch(value)) {
+                return 'Enter a valid email address';
+              }
+              return null;
+            },
           ),
           SizedBox(height: 20),
           Text(
@@ -146,26 +188,27 @@ class BookingFormScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyText2,
           ),
           SizedBox(height: 10),
-          TextField(
+          TextFormField(
             controller: _departureTimeController,
             keyboardType: TextInputType.datetime,
+            enabled: false,
             decoration: InputDecoration(
               hintText: '00:00 AM',
-              focusedBorder: OutlineInputBorder(
+              border: OutlineInputBorder(
                 borderSide: BorderSide(
                   color: Theme.of(context).primaryColor,
                   width: 1,
                 ),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).hintColor,
-                  width: 1,
-                ),
-              ),
             ),
             textInputAction: TextInputAction.done,
-            onSubmitted: (_) => node.unfocus(),
+            onEditingComplete: () => node.unfocus(),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'This field cannot be empty';
+              }
+              return null;
+            },
           ),
           SizedBox(height: 20),
           Text(
@@ -173,26 +216,27 @@ class BookingFormScreen extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyText2,
           ),
           SizedBox(height: 10),
-          TextField(
+          TextFormField(
             controller: _returnTimeController,
             keyboardType: TextInputType.datetime,
+            enabled: false,
             decoration: InputDecoration(
               hintText: '00:00 AM',
-              focusedBorder: OutlineInputBorder(
+              border: OutlineInputBorder(
                 borderSide: BorderSide(
                   color: Theme.of(context).primaryColor,
                   width: 1,
                 ),
               ),
-              enabledBorder: OutlineInputBorder(
-                borderSide: BorderSide(
-                  color: Theme.of(context).hintColor,
-                  width: 1,
-                ),
-              ),
             ),
             textInputAction: TextInputAction.next,
-            onSubmitted: (_) => node.nextFocus(),
+            onEditingComplete: () => node.nextFocus(),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'This field cannot be empty';
+              }
+              return null;
+            },
           ),
           SizedBox(height: 20),
           Row(
@@ -207,26 +251,26 @@ class BookingFormScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyText2,
                     ),
                     SizedBox(height: 10),
-                    TextField(
+                    TextFormField(
                       controller: _adultCountController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         hintText: '0',
-                        focusedBorder: OutlineInputBorder(
+                        border: OutlineInputBorder(
                           borderSide: BorderSide(
                             color: Theme.of(context).primaryColor,
                             width: 1,
                           ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Theme.of(context).hintColor,
-                            width: 1,
-                          ),
-                        ),
                       ),
                       textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => node.unfocus(),
+                      onEditingComplete: () => node.unfocus(),
+                      validator: (value) {
+                        if (value.isEmpty) {
+                          return 'This field cannot be empty';
+                        }
+                        return null;
+                      },
                     ),
                   ],
                 ),
@@ -241,26 +285,26 @@ class BookingFormScreen extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyText2,
                     ),
                     SizedBox(height: 10),
-                    TextField(
+                    TextFormField(
                       controller: _minorCountController,
                       keyboardType: TextInputType.number,
                       decoration: InputDecoration(
                         hintText: '0',
-                        focusedBorder: OutlineInputBorder(
+                        border: OutlineInputBorder(
                           borderSide: BorderSide(
                             color: Theme.of(context).primaryColor,
                             width: 1,
                           ),
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Theme.of(context).hintColor,
-                            width: 1,
-                          ),
-                        ),
                       ),
                       textInputAction: TextInputAction.done,
-                      onSubmitted: (_) => node.unfocus(),
+                      onEditingComplete: () => node.unfocus(),
+                      validator: (value) {
+                        if (value.isEmpty) {
+                          return 'This field cannot be empty';
+                        }
+                        return null;
+                      },
                     ),
                   ],
                 ),
@@ -268,6 +312,45 @@ class BookingFormScreen extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _onPressPrimaryBtn(BuildContext context) async {
+    if (!_formKey.currentState.validate()) {
+      logger.d('Invalid form submission');
+      return;
+    }
+
+    Booking booking = Booking(
+      ticketID: Uuid().v4(),
+      customerName: _nameController.text,
+      customerPhone: _phoneController.text,
+      email: _emailController.text,
+      tripReturnTime: _returnTimeController.text,
+      tripStartTime: _departureTimeController.text,
+      adult: _adultCountController.text,
+      minor: _minorCountController.text,
+      status: '',
+      // TODO: Missing value
+      agentName: '',
+      // TODO: Missing value
+      bookingAgentID: '',
+      // TODO: Missing value
+      bookingDate: DateFormat('dd/MM/yyy').format(DateTime.now()),
+      bookingDateTimeStamp: DateTime.now(),
+      comment: '',
+      taxiID: widget.taxiId,
+    );
+
+    // Create new bookings
+    String ticketId = await FirestoreDBService.createBooking(booking);
+
+    // Navigator.popUntil(context, (route) => route is DashboardScreen);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TicketBookedScreen(ticketId: ticketId),
       ),
     );
   }
