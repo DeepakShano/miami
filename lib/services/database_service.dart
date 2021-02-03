@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'package:water_taxi_miami/global.dart';
+import 'package:water_taxi_miami/models/admin_message.dart';
 import 'package:water_taxi_miami/models/booking.dart';
 import 'package:water_taxi_miami/models/taxi_detail.dart';
 
@@ -39,6 +41,24 @@ class FirestoreDBService {
       logger.d('Booking found with ID $id, ${value.data()}');
 
       return Booking.fromJson(value.data());
+    });
+  }
+
+  static Future<AdminMessage> getAdminMessage(DateTime date) {
+    String dateStr = DateFormat('dd/MM/yyyy').format(date);
+
+    return FirebaseFirestore.instance
+        .collection('adminMessage')
+        .where('messageDate', isEqualTo: dateStr)
+        .limit(1)
+        .get()
+        .then((value) {
+      if (value.size == 0) {
+        logger.d('No message of day found for date $dateStr');
+        return null;
+      }
+
+      return AdminMessage.fromJson(value.docs.first.data());
     });
   }
 }

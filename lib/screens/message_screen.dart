@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:water_taxi_miami/components/app_drawer.dart';
+import 'package:water_taxi_miami/models/admin_message.dart';
+import 'package:water_taxi_miami/services/database_service.dart';
 
 class MessageScreen extends StatelessWidget {
   @override
@@ -10,23 +13,43 @@ class MessageScreen extends StatelessWidget {
         title: Text('Message of the Day'),
       ),
       drawer: AppDrawer(),
-      body: Container(
-        padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '12/01/2021',
-              style: Theme.of(context).textTheme.subtitle1,
-            ),
-            SizedBox(height: 20),
-            Text(
-              'Gm TEAM;	•	FIRST DEPARTURE 12pm	•	LAST DEP. 8:30pm	•	ROUND TRIPS ONLY if not busy 	•	NO FREE BEER today 	•	MARK All BABIES ON YOUR RECEIPT, Every body counts! Let’s have a good day day thanks for  your support ! ',
-              style: Theme.of(context).textTheme.bodyText1,
-            ),
-          ],
-        ),
-      ),
+      body: FutureBuilder<AdminMessage>(
+          future: FirestoreDBService.getAdminMessage(DateTime.now()),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (snapshot.hasError) {
+              return Center(
+                child: Text('There was some issue..'),
+              );
+            }
+
+            AdminMessage message = snapshot.data;
+
+            return Container(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    message?.messageDate ??
+                        DateFormat('dd/MM/yyyy').format(DateTime.now()),
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                  SizedBox(height: 20),
+                  Text(
+                    message?.message ?? 'No message today',
+                    style: Theme.of(context).textTheme.bodyText1.copyWith(
+                        fontStyle: message == null
+                            ? FontStyle.italic
+                            : FontStyle.normal),
+                  ),
+                ],
+              ),
+            );
+          }),
     );
   }
 }
