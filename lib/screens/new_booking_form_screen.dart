@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:water_taxi_miami/models/booking.dart';
+import 'package:water_taxi_miami/providers/app_user_provider.dart';
 import 'package:water_taxi_miami/screens/ticket_booked_screen.dart';
 import 'package:water_taxi_miami/services/database_service.dart';
 
@@ -332,10 +334,8 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       adult: _adultCountController.text,
       minor: _minorCountController.text,
       status: 'Pending',
-      agentName: '',
-      // TODO: Missing value
-      bookingAgentID: '',
-      // TODO: Missing value
+      agentName: context.read<AppUserProvider>().appUser?.name,
+      bookingAgentID: context.read<AppUserProvider>().appUser?.userID,
       bookingDate: DateFormat('dd/MM/yyy').format(DateTime.now()),
       bookingDateTimeStamp: DateTime.now(),
       comment: '',

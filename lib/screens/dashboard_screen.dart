@@ -23,10 +23,6 @@ class DashboardScreen extends StatelessWidget {
               );
             },
           ),
-          IconButton(
-            icon: Icon(Icons.exit_to_app_outlined),
-            onPressed: () {},
-          )
         ],
       ),
       drawer: AppDrawer(),

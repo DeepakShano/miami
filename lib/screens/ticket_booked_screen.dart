@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share/share.dart';
 import 'package:water_taxi_miami/models/booking.dart';
 import 'package:water_taxi_miami/services/database_service.dart';
@@ -50,10 +51,10 @@ class TicketBookedScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.headline6,
               ),
               SizedBox(height: 40),
-              Container(
-                color: Colors.grey,
-                height: 250,
-                width: 250,
+              QrImage(
+                data: generateQRData(booking),
+                version: QrVersions.auto,
+                size: 250.0,
               ),
               SizedBox(height: 40),
               Container(
@@ -82,8 +83,11 @@ class TicketBookedScreen extends StatelessWidget {
     Share.share(generateShareText(booking), subject: 'Ticket Detail');
   }
 
+  String generateQRData(Booking b) {
+    return 'Ticket ID:${b.ticketID}\nCustomer Name: ${b.customerName}\nSales Agent Name: ${b.agentName}\nDeparting Time BS: ${b.tripStartTime}\nDeparting Time MB: ${b.tripReturnTime}\nComment: ${b.comment}';
+  }
+
   String generateShareText(Booking booking) {
-    return ''
-        'We are NOT responsible for any weather conditions, Personal belongings, Caption hold the right to change route and cancel trips, This is NOT a Signseening tour.';
+    return 'Water Taxi Miami\n305-600-2511\nwww.watertaximiami.com\nFor Boarding make sure to be at least 5 minutes before boarding time at Water Taxi station\n305-600-2511\nDisclaimer...................\nWe are NOT responsible for any weather conditions, Personal belongings, Captain hold the right to change route and cancel trips, This is NOT a Sightseeing tour.';
   }
 }
