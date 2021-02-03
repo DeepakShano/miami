@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:water_taxi_miami/components/booking_list_item.dart';
 import 'package:water_taxi_miami/models/booking.dart';
+import 'package:water_taxi_miami/providers/app_user_provider.dart';
 import 'package:water_taxi_miami/screens/edit_booking_screen.dart';
 import 'package:water_taxi_miami/screens/ticket_booked_screen.dart';
 import 'package:water_taxi_miami/services/database_service.dart';
@@ -18,7 +20,8 @@ class BookingListScreen extends StatelessWidget {
           child: Column(
             children: [
               StreamBuilder<List<Booking>>(
-                  stream: FirestoreDBService.streamTickets(),
+                  stream: FirestoreDBService.streamTickets(
+                      context.watch<AppUserProvider>().appUser.userID),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(

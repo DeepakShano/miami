@@ -141,10 +141,11 @@ class FirestoreDBService {
     });
   }
 
-  static Stream<List<Booking>> streamTickets() {
+  static Stream<List<Booking>> streamTickets(String agentId) {
     return FirebaseFirestore.instance
         .collection('manageBooking')
-    // .where('bookingDateTimeStamp', isGreaterThanOrEqualTo: DateTime.now())
+        // .where('bookingDateTimeStamp', isGreaterThanOrEqualTo: DateTime.now())
+        .where('bookingAgentID', isEqualTo: agentId)
         .orderBy('bookingDateTimeStamp', descending: true)
         .snapshots()
         .map((event) {
