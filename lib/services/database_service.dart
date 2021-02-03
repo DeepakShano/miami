@@ -27,6 +27,15 @@ class FirestoreDBService {
         .then((value) => bookingId);
   }
 
+  /// Returns booking ID
+  static Future<String> updateBooking(String id, Booking booking) {
+    return FirebaseFirestore.instance
+        .collection('manageBooking')
+        .doc(id)
+        .update(booking.toJson())
+        .then((value) => id);
+  }
+
   static Future<Booking> getBooking(String id) {
     return FirebaseFirestore.instance
         .collection('manageBooking')
@@ -60,5 +69,23 @@ class FirestoreDBService {
 
       return AdminMessage.fromJson(value.docs.first.data());
     });
+  }
+
+  static Stream<List<Booking>> streamTickets() {
+    return FirebaseFirestore.instance
+        .collection('manageBooking')
+        // .where('bookingDateTimeStamp', isGreaterThanOrEqualTo: DateTime.now())
+        .orderBy('bookingDateTimeStamp', descending: true)
+        .snapshots()
+        .map((event) {
+      return event.docs.map((e) => Booking.fromJson(e.data()))?.toList();
+    });
+  }
+
+  static Future<void> deleteBooking(String id) {
+    return FirebaseFirestore.instance
+        .collection('manageBooking')
+        .doc(id)
+        .delete();
   }
 }

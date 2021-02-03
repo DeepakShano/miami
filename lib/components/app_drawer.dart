@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:water_taxi_miami/screens/booking_list_screen.dart';
 
 class AppDrawer extends StatelessWidget {
   @override
@@ -20,7 +21,6 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
           ),
-
           ListTile(
             leading: Icon(Icons.edit_outlined),
             title: Text('Edit Ticket'),
@@ -29,7 +29,14 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             leading: Icon(Icons.list_outlined),
             title: Text('Ticket List'),
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => BookingListScreen(),
+                ),
+              );
+            },
           ),
           ListTile(
             leading: Icon(Icons.fiber_pin_outlined),
