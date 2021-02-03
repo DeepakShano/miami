@@ -8,7 +8,6 @@ class AppUser {
   String enrollDate;
   String userID;
   String fcmToken;
-  bool isPinON;
   String email;
 
   AppUser({
@@ -20,7 +19,6 @@ class AppUser {
     this.enrollDate,
     this.userID,
     this.fcmToken,
-    this.isPinON,
     this.email,
   });
 
@@ -33,7 +31,6 @@ class AppUser {
     enrollDate = json['enrollDate'];
     userID = json['userID'];
     fcmToken = json['fcmToken'];
-    isPinON = json['isPinON'];
     email = json['email'];
   }
 
@@ -47,7 +44,6 @@ class AppUser {
     data['enrollDate'] = this.enrollDate;
     data['userID'] = this.userID;
     data['fcmToken'] = this.fcmToken;
-    data['isPinON'] = this.isPinON;
     data['email'] = this.email;
     return data;
   }

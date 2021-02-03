@@ -331,8 +331,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       tripStartTime: _departureTimeController.text,
       adult: _adultCountController.text,
       minor: _minorCountController.text,
-      status: '',
-      // TODO: Missing value
+      status: 'Pending',
       agentName: '',
       // TODO: Missing value
       bookingAgentID: '',
@@ -346,7 +345,8 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
     // Create new bookings
     String ticketId = await FirestoreDBService.createBooking(booking);
 
-    // Navigator.popUntil(context, (route) => route is DashboardScreen);
+    Navigator.pop(context);
+    Navigator.pop(context);
     Navigator.push(
       context,
       MaterialPageRoute(

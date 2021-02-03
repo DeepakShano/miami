@@ -1,36 +1,25 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
-import 'package:uuid/uuid.dart';
+import 'package:water_taxi_miami/global.dart';
 import 'package:water_taxi_miami/models/app_user.dart';
+import 'package:water_taxi_miami/services/database_service.dart';
 
 class AuthService {
   static Future<bool> loginUser(String pinCode) {
     return Future.delayed(Duration(seconds: 2), () => true);
   }
 
-  static Future<void> signUpUser(String name, String phoneNo, String emailAddress) {
-    String uid = Uuid().v4();
+  static Future<AppUser> signUpUser(
+      String name, String phoneNo, String emailAddress, String pinCode) async {
+    if (!(await FirestoreDBService.isPinCodeUnique(pinCode))) {
+      logger.d('Pin code is not unique. Could not sign up user.');
+      return Future.error('Pin code is not unique. Could not register user.');
+    }
 
-    AppUser appUser = AppUser(
-      phone: phoneNo,
-      name: name,
-      status: '',
-      // TODO: Missing default value
-      email: emailAddress,
-      enrollDate: DateFormat('dd MMM, yyyy').format(DateTime.now()),
-      isPinON: true,
-      // TODO: Missing default value
-      userID: uid,
-      userPin: '',
-      // TODO: Missing default value
-      userType: '',
-      // TODO: Missing default value
-      fcmToken: '', // TODO: Missing default value
-    );
+    if (!(await FirestoreDBService.isPhoneUnique(phoneNo))) {
+      logger.d('Phone is not unique. Could not sign up user.');
+      return Future.error(
+          'Phone number is not unique. Could not register user.');
+    }
 
-    return FirebaseFirestore.instance
-        .collection('UserInfo')
-        .doc(uid)
-        .set(appUser.toJson());
+    return FirestoreDBService.signUpUser(name, phoneNo, emailAddress, pinCode);
   }
 }

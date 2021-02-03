@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:water_taxi_miami/auth_service.dart';
 import 'package:water_taxi_miami/global.dart';
+import 'package:water_taxi_miami/models/app_user.dart';
 
 class SignUpScreen extends StatelessWidget {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -9,6 +10,7 @@ class SignUpScreen extends StatelessWidget {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _pinController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -151,6 +153,30 @@ class SignUpScreen extends StatelessWidget {
               return null;
             },
           ),
+          SizedBox(height: 20),
+          TextFormField(
+            controller: _pinController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              hintText: '4 Digit Pin Code',
+              border: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Theme.of(context).primaryColor,
+                  width: 1,
+                ),
+              ),
+            ),
+            textInputAction: TextInputAction.done,
+            onEditingComplete: () => node.unfocus(),
+            validator: (value) {
+              if (value.isEmpty) {
+                return 'This field cannot be empty';
+              } else if (value.length != 4) {
+                return 'Pin Code should be of 4 digits';
+              }
+              return null;
+            },
+          ),
         ],
       ),
     );
@@ -163,26 +189,38 @@ class SignUpScreen extends StatelessWidget {
     }
 
     // Sign up user
-    await AuthService.signUpUser(
+    AppUser user = await AuthService.signUpUser(
       _firstNameController.text,
       _phoneController.text,
       _emailController.text,
-    );
+      _pinController.text,
+    ).catchError((error) {
+      if (error.runtimeType == String) {
+        _scaffoldKey.currentState.showSnackBar(
+          SnackBar(
+            content: Text(error),
+            backgroundColor: Theme.of(context).errorColor,
+          ),
+        );
+      }
+    });
 
-    _formKey.currentState.reset();
+    if (user != null) {
+      _formKey.currentState.reset();
 
-    _scaffoldKey.currentState.showSnackBar(
-      SnackBar(
-        content: Text('Sign up request is sent to Admin.'),
-        backgroundColor: Colors.green,
-        action: SnackBarAction(
-          label: 'OKAY',
-          onPressed: () {
-            Navigator.pop(context);
-          },
+      _scaffoldKey.currentState.showSnackBar(
+        SnackBar(
+          content: Text('Sign up request is sent to Admin.'),
+          backgroundColor: Colors.green,
+          action: SnackBarAction(
+            label: 'OKAY',
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+          duration: Duration(seconds: 5),
         ),
-        duration: Duration(seconds: 5),
-      ),
-    );
+      );
+    }
   }
 }

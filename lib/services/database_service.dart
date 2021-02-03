@@ -3,10 +3,60 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'package:water_taxi_miami/global.dart';
 import 'package:water_taxi_miami/models/admin_message.dart';
+import 'package:water_taxi_miami/models/app_user.dart';
 import 'package:water_taxi_miami/models/booking.dart';
 import 'package:water_taxi_miami/models/taxi_detail.dart';
 
 class FirestoreDBService {
+  /// Returns true if no other user has matching [phone]
+  static Future<bool> isPhoneUnique(String phone) {
+    return FirebaseFirestore.instance
+        .collection('UserInfo')
+        .where('phone', isEqualTo: phone)
+        .get()
+        .then((querySnapshot) {
+      return querySnapshot.size == 0;
+    });
+  }
+
+  /// Returns true if no other user has matching [pinCode]
+  static Future<bool> isPinCodeUnique(String pinCode) {
+    return FirebaseFirestore.instance
+        .collection('UserInfo')
+        .where('userPin', isEqualTo: pinCode)
+        .get()
+        .then((querySnapshot) {
+      return querySnapshot.size == 0;
+    });
+  }
+
+  static Future<AppUser> signUpUser(
+    String name,
+    String phoneNo,
+    String emailAddress,
+    String pinCode,
+  ) {
+    String uid = Uuid().v4();
+
+    AppUser appUser = AppUser(
+      phone: phoneNo,
+      name: name,
+      status: 'Pending',
+      email: emailAddress,
+      enrollDate: DateFormat('dd MMM, yyyy').format(DateTime.now()),
+      userID: uid,
+      userPin: pinCode,
+      userType: 'Agent',
+      fcmToken: '', // TODO: Missing default value
+    );
+
+    return FirebaseFirestore.instance
+        .collection('UserInfo')
+        .doc(uid)
+        .set(appUser.toJson())
+        .then((value) => appUser);
+  }
+
   static Stream<List<TaxiDetail>> streamTaxiDetails() {
     return FirebaseFirestore.instance
         .collection('TaxiDetail')
@@ -24,7 +74,15 @@ class FirestoreDBService {
         .collection('manageBooking')
         .doc(bookingId)
         .set(booking.toJson())
-        .then((value) => bookingId);
+        .then((value) {
+      int totalSeatsBooked =
+          int.parse(booking.adult) + int.parse(booking.minor);
+
+      return FirebaseFirestore.instance
+          .collection('TaxiDetail')
+          .doc(booking.taxiID)
+          .update({'TotalSeats': FieldValue.increment(-totalSeatsBooked)});
+    }).then((value) => bookingId);
   }
 
   /// Returns booking ID
@@ -46,8 +104,6 @@ class FirestoreDBService {
         logger.d('No booking found with ID $id');
         return null;
       }
-
-      logger.d('Booking found with ID $id, ${value.data()}');
 
       return Booking.fromJson(value.data());
     });
@@ -74,7 +130,7 @@ class FirestoreDBService {
   static Stream<List<Booking>> streamTickets() {
     return FirebaseFirestore.instance
         .collection('manageBooking')
-        // .where('bookingDateTimeStamp', isGreaterThanOrEqualTo: DateTime.now())
+    // .where('bookingDateTimeStamp', isGreaterThanOrEqualTo: DateTime.now())
         .orderBy('bookingDateTimeStamp', descending: true)
         .snapshots()
         .map((event) {
