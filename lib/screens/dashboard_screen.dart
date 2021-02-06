@@ -58,7 +58,7 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _datePicker(BuildContext context) {
     DateTime date = context.watch<TaxiProvider>().date;
-    String dateStr = DateFormat('dd-MMM-yyyy').format(date);
+    String dateStr = DateFormat('dd-MMM-yyyy (EEEE)').format(date);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),

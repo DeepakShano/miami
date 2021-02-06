@@ -1,5 +1,4 @@
 import 'package:logger/logger.dart';
 
-const bool DEBUG = true;
+const bool DEBUG = false;
 final Logger logger = Logger();
-
