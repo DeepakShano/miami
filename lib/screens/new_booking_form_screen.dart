@@ -50,6 +50,9 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       _returnTimeController.text = widget.selectedReturnTime;
     }
 
+    _minorCountController.text = '0';
+    _adultCountController.text = '0';
+
     if (DEBUG) {
       _nameController.text = 'Test';
       _phoneController.text = '9895952623';
@@ -272,6 +275,8 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
                       validator: (value) {
                         if (value.isEmpty) {
                           return 'This field cannot be empty';
+                        } else if (!isMinorAdultCountValid()) {
+                          return 'There should be at least 1 adult or minor';
                         }
                         return null;
                       },
@@ -306,6 +311,8 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
                       validator: (value) {
                         if (value.isEmpty) {
                           return 'This field cannot be empty';
+                        } else if (!isMinorAdultCountValid()) {
+                          return 'There should be at least 1 adult or minor';
                         }
                         return null;
                       },
@@ -318,6 +325,17 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
         ],
       ),
     );
+  }
+
+  bool isMinorAdultCountValid() {
+    if (_adultCountController.text.isEmpty ||
+        _minorCountController.text.isEmpty)
+      return false;
+    else if (int.parse(_adultCountController.text) +
+            int.parse(_minorCountController.text) <=
+        0) return false;
+
+    return true;
   }
 
   Future<void> _onPressPrimaryBtn(BuildContext context) async {
