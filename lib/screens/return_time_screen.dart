@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:water_taxi_miami/models/taxi_detail.dart';
+import 'package:water_taxi_miami/models/taxi_stats.dart';
 import 'package:water_taxi_miami/providers/taxi_provider.dart';
 import 'package:water_taxi_miami/screens/new_booking_form_screen.dart';
 
@@ -35,6 +36,13 @@ class ReturnTimeScreen extends StatelessWidget {
         ? taxiDetail.weekEndReturnTiming
         : taxiDetail.weekDayReturnTiming;
 
+    List<TaxiStats> taxiStats = context.watch<TaxiProvider>().taxiStats;
+    TaxiStats taxiStat = taxiStats?.firstWhere(
+      (element) => element.taxiID == taxiDetail.id,
+      orElse: () => null,
+    );
+    List<TimingStat> returnTimingStats = taxiStat?.returnTimingList;
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -53,6 +61,14 @@ class ReturnTimeScreen extends StatelessWidget {
                 physics: NeverScrollableScrollPhysics(),
                 itemCount: returnTimings.length,
                 itemBuilder: (context, index) {
+                  String returnTiming = returnTimings.elementAt(index);
+
+                  int seatsBooked = returnTimingStats
+                      ?.firstWhere((e) => e.time == returnTiming,
+                          orElse: () => null)
+                      ?.alreadyBooked;
+                  int seatsLeft = taxiDetail.totalSeats - (seatsBooked ?? 0);
+
                   return InkWell(
                     onTap: () {
                       Navigator.push(
@@ -69,7 +85,7 @@ class ReturnTimeScreen extends StatelessWidget {
                     child: Card(
                       child: ListTile(
                         title: Text(
-                          returnTimings.elementAt(index) ?? '-',
+                          returnTiming ?? '-',
                           style: Theme.of(context)
                               .textTheme
                               .subtitle1
@@ -86,7 +102,7 @@ class ReturnTimeScreen extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              '${taxiDetail.totalSeats ?? 0}',
+                              '${seatsLeft ?? 0}',
                               style: Theme.of(context)
                                   .textTheme
                                   .caption
