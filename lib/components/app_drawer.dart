@@ -26,11 +26,6 @@ class AppDrawer extends StatelessWidget {
               ),
             ),
           ),
-          // ListTile(
-          //   leading: Icon(Icons.edit_outlined),
-          //   title: Text('Edit Ticket'),
-          //   onTap: () {},
-          // ),
           ListTile(
             leading: Icon(Icons.list_outlined),
             title: Text('Ticket List'),
@@ -43,11 +38,6 @@ class AppDrawer extends StatelessWidget {
               );
             },
           ),
-          // ListTile(
-          //   leading: Icon(Icons.fiber_pin_outlined),
-          //   title: Text('Set Pin'),
-          //   onTap: () {},
-          // ),
         ],
       ),
     );

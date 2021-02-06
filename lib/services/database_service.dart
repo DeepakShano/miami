@@ -6,6 +6,7 @@ import 'package:water_taxi_miami/models/admin_message.dart';
 import 'package:water_taxi_miami/models/app_user.dart';
 import 'package:water_taxi_miami/models/booking.dart';
 import 'package:water_taxi_miami/models/taxi_detail.dart';
+import 'package:water_taxi_miami/models/taxi_stats.dart';
 
 class FirestoreDBService {
   /// Returns true if no other user has matching [phone]
@@ -158,5 +159,59 @@ class FirestoreDBService {
         .collection('manageBooking')
         .doc(id)
         .delete();
+  }
+
+  static Stream<TaxiStats> streamTaxiStats(String taxiId, DateTime date) {
+    String dateStr = DateFormat('dd-MMM-yyyy').format(date);
+    logger.d('dateStr: $dateStr');
+
+    return FirebaseFirestore.instance
+        .collection('todayStat')
+        .where('taxiID', isEqualTo: taxiId)
+        .where('todayDate', isEqualTo: dateStr)
+        .snapshots()
+        .map((querySnapshot) {
+      if (querySnapshot.size == 0) {
+        logger.d('No stats found for taxi ID $taxiId and date $dateStr');
+        return null;
+      }
+
+      return TaxiStats.fromJson(querySnapshot.docs.first.data());
+    });
+  }
+
+  static Future<TaxiStats> generateNewTaxiStat(
+    TaxiDetail taxiDetail,
+    DateTime date,
+  ) {
+    TaxiStats taxiStats = TaxiStats(
+      taxiID: taxiDetail.id,
+      name: taxiDetail.name,
+      totalSeats: taxiDetail.totalSeats,
+      todayDate: DateFormat('dd-MMM-yyyy').format(date),
+      startTimingList: List(),
+      returnTimingList: List(),
+    );
+
+    bool isWeekend = [6, 7].contains(DateTime.now().weekday);
+
+    List<String> startTimings = isWeekend
+        ? taxiDetail.weekEndStartTiming
+        : taxiDetail.weekDayStartTiming;
+    List<String> returnTimings = isWeekend
+        ? taxiDetail.weekEndReturnTiming
+        : taxiDetail.weekDayReturnTiming;
+
+    startTimings.forEach((e) =>
+        taxiStats.startTimingList.add(TimingStat(alreadyBooked: 0, time: e)));
+    returnTimings.forEach((e) =>
+        taxiStats.returnTimingList.add(TimingStat(alreadyBooked: 0, time: e)));
+
+    String docId = '${taxiDetail.id}${DateFormat('ddMMMyyyy').format(date)}';
+    return FirebaseFirestore.instance
+        .collection('todayStat')
+        .doc(docId)
+        .set(taxiStats.toJson())
+        .then((value) => taxiStats);
   }
 }

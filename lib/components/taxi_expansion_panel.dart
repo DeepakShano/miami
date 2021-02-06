@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:water_taxi_miami/models/taxi_detail.dart';
+import 'package:water_taxi_miami/models/taxi_stats.dart';
+import 'package:water_taxi_miami/providers/taxi_provider.dart';
 import 'package:water_taxi_miami/screens/return_time_screen.dart';
 
 class TaxiExpansionPanelList extends StatefulWidget {
@@ -50,6 +53,13 @@ class _TaxiExpansionPanelListState extends State<TaxiExpansionPanelList> {
         ? taxiDetail.weekEndStartTiming
         : taxiDetail.weekDayStartTiming;
 
+    List<TaxiStats> taxiStats = context.watch<TaxiProvider>().taxiStats;
+    TaxiStats taxiStat = taxiStats?.firstWhere(
+      (element) => element.taxiID == taxiDetail.id,
+      orElse: () => null,
+    );
+    List<TimingStat> departTimingStats = taxiStat?.startTimingList;
+
     return ExpansionPanel(
       isExpanded: isExpanded,
       headerBuilder: (BuildContext context, bool isExpanded) {
@@ -66,6 +76,11 @@ class _TaxiExpansionPanelListState extends State<TaxiExpansionPanelList> {
         itemCount: departTimings.length,
         itemBuilder: (context, index) {
           String departTiming = departTimings.elementAt(index);
+
+          int seatsBooked = departTimingStats
+              ?.firstWhere((e) => e.time == departTiming, orElse: () => null)
+              ?.alreadyBooked;
+          int seatsLeft = taxiDetail.totalSeats - (seatsBooked ?? 0);
 
           return InkWell(
             onTap: () {
@@ -98,7 +113,7 @@ class _TaxiExpansionPanelListState extends State<TaxiExpansionPanelList> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '${taxiDetail.totalSeats ?? 0}',
+                    '${seatsLeft ?? 0}',
                     style: Theme.of(context)
                         .textTheme
                         .caption
