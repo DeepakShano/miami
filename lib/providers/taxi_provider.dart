@@ -5,6 +5,7 @@ import 'package:water_taxi_miami/models/taxi_stats.dart';
 import 'package:water_taxi_miami/services/database_service.dart';
 
 class TaxiProvider extends ChangeNotifier {
+  DateTime _date = DateTime.now();
   List<TaxiDetail> taxis = List();
   List<TaxiStats> taxiStats = List();
 
@@ -45,5 +46,12 @@ class TaxiProvider extends ChangeNotifier {
         notifyListeners();
       });
     }
+  }
+
+  DateTime get date => _date;
+
+  set date(DateTime value) {
+    _date = value;
+    notifyListeners();
   }
 }

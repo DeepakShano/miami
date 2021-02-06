@@ -82,21 +82,24 @@ class FirestoreDBService {
   }
 
   /// Returns booking ID
-  static Future<String> createBooking(Booking booking) {
+  static Future<String> createBooking(
+    Booking booking,
+    TaxiStats updatedTaxiStats,
+    DateTime date,
+  ) {
     String bookingId = booking.ticketID ?? Uuid().v4();
 
     return FirebaseFirestore.instance
         .collection('manageBooking')
         .doc(bookingId)
         .set(booking.toJson())
-        .then((value) {
-      int totalSeatsBooked =
-          int.parse(booking.adult) + int.parse(booking.minor);
+        .then((_) {
+      String docId = '${booking.taxiID}${DateFormat('ddMMMyyy').format(date)}';
 
       return FirebaseFirestore.instance
-          .collection('TaxiDetail')
-          .doc(booking.taxiID)
-          .update({'TotalSeats': FieldValue.increment(-totalSeatsBooked)});
+          .collection('todayStat')
+          .doc(docId)
+          .set(updatedTaxiStats.toJson());
     }).then((value) => bookingId);
   }
 

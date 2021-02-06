@@ -46,7 +46,7 @@ class ReturnTimeScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Depart Time: ${selectedDepartTime}'),
+              Text('Departure Time: $selectedDepartTime'),
               SizedBox(height: 16),
               ListView.separated(
                 shrinkWrap: true,

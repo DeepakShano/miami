@@ -3,7 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:water_taxi_miami/models/booking.dart';
+import 'package:water_taxi_miami/models/taxi_stats.dart';
 import 'package:water_taxi_miami/providers/app_user_provider.dart';
+import 'package:water_taxi_miami/providers/taxi_provider.dart';
 import 'package:water_taxi_miami/screens/ticket_booked_screen.dart';
 import 'package:water_taxi_miami/services/database_service.dart';
 
@@ -52,8 +54,8 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       _nameController.text = 'Test';
       _phoneController.text = '9895952623';
       _emailController.text = 'a@a.a';
-      _minorCountController.text = '5';
-      _adultCountController.text = '5';
+      _minorCountController.text = '1';
+      _adultCountController.text = '1';
     }
 
     super.initState();
@@ -343,7 +345,26 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
     );
 
     // Create new bookings
-    String ticketId = await FirestoreDBService.createBooking(booking);
+    List<TaxiStats> taxiStats = context.read<TaxiProvider>().taxiStats;
+    TaxiStats taxiStat = taxiStats?.firstWhere(
+      (e) => e.taxiID == widget.taxiId,
+      orElse: () => null,
+    );
+
+    TimingStat startTimingStat = taxiStat.startTimingList
+        .firstWhere((e) => e.time == booking.tripStartTime);
+    TimingStat returnTimingStat = taxiStat.returnTimingList
+        .firstWhere((e) => e.time == booking.tripReturnTime);
+    startTimingStat.alreadyBooked +=
+        int.parse(booking.adult) + int.parse(booking.minor);
+    returnTimingStat.alreadyBooked +=
+        int.parse(booking.adult) + int.parse(booking.minor);
+
+    String ticketId = await FirestoreDBService.createBooking(
+      booking,
+      taxiStat,
+      context.read<TaxiProvider>().date,
+    );
 
     Navigator.pop(context);
     Navigator.pop(context);
