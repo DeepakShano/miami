@@ -77,7 +77,12 @@ class DashboardScreen extends StatelessWidget {
         },
         child: Card(
           child: Container(
-            child: Text(dateStr),
+            child: Row(
+              children: [
+                Expanded(child: Text(dateStr)),
+                Icon(Icons.arrow_drop_down),
+              ],
+            ),
             width: MediaQuery.of(context).size.width,
             padding: EdgeInsets.all(20),
             decoration: BoxDecoration(
