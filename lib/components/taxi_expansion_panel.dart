@@ -47,7 +47,8 @@ class _TaxiExpansionPanelListState extends State<TaxiExpansionPanelList> {
   }
 
   ExpansionPanel buildExpansionPanel(TaxiDetail taxiDetail, bool isExpanded) {
-    bool isWeekend = [6, 7].contains(DateTime.now().weekday);
+    bool isWeekend =
+        [6, 7].contains(context.watch<TaxiProvider>().date.weekday);
 
     List<String> departTimings = isWeekend
         ? taxiDetail.weekEndStartTiming

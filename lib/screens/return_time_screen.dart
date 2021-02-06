@@ -30,7 +30,8 @@ class ReturnTimeScreen extends StatelessWidget {
       );
     }
 
-    bool isWeekend = [6, 7].contains(DateTime.now().weekday);
+    bool isWeekend =
+        [6, 7].contains(context.watch<TaxiProvider>().date.weekday);
 
     List<String> returnTimings = isWeekend
         ? taxiDetail.weekEndReturnTiming

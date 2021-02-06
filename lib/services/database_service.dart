@@ -196,7 +196,7 @@ class FirestoreDBService {
       returnTimingList: List(),
     );
 
-    bool isWeekend = [6, 7].contains(DateTime.now().weekday);
+    bool isWeekend = [6, 7].contains(date.weekday);
 
     List<String> startTimings = isWeekend
         ? taxiDetail.weekEndStartTiming
