@@ -62,6 +62,7 @@ class FirestoreDBService {
     return FirebaseFirestore.instance
         .collection('UserInfo')
         .where('userPin', isEqualTo: pinCode)
+        .where('status', isEqualTo: 'Approved')
         .get()
         .then((querySnapshot) {
       if (querySnapshot.size == 0) {

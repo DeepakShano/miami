@@ -130,9 +130,10 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
             textInputAction: TextInputAction.next,
             onEditingComplete: () => node.nextFocus(),
             validator: (value) {
-              if (value.isEmpty) {
-                return 'This field cannot be empty';
+              if (!isEmailPhoneValid()) {
+                return 'Both email and phone number cannot be empty';
               }
+
               return null;
             },
           ),
@@ -157,13 +158,18 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
             textInputAction: TextInputAction.done,
             onEditingComplete: () => node.unfocus(),
             validator: (value) {
-              if (value.isEmpty) {
-                return 'This field cannot be empty';
-              } else if (!RegExp(
-                      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
-                  .hasMatch(value)) {
-                return 'Enter a valid email address';
+              if (value.isNotEmpty) {
+                if (!RegExp(
+                        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                    .hasMatch(value)) {
+                  return 'Enter a valid email address';
+                }
               }
+
+              if (!isEmailPhoneValid()) {
+                return 'Both email and phone number cannot be empty';
+              }
+
               return null;
             },
           ),
@@ -299,6 +305,10 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
         ],
       ),
     );
+  }
+
+  bool isEmailPhoneValid() {
+    return _emailController.text.isNotEmpty || _phoneController.text.isNotEmpty;
   }
 
   Future<void> _onPressPrimaryBtn(BuildContext context) async {
