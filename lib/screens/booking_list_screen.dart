@@ -7,6 +7,8 @@ import 'package:water_taxi_miami/screens/edit_booking_screen.dart';
 import 'package:water_taxi_miami/screens/ticket_booked_screen.dart';
 import 'package:water_taxi_miami/services/database_service.dart';
 
+import '../global.dart';
+
 class BookingListScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -28,6 +30,7 @@ class BookingListScreen extends StatelessWidget {
                         child: CircularProgressIndicator(),
                       );
                     } else if (snapshot.hasError) {
+                      logger.e(snapshot.error);
                       return Center(
                         child: Text('There was some issue..'),
                       );

@@ -105,12 +105,24 @@ class FirestoreDBService {
   }
 
   /// Returns booking ID
-  static Future<String> updateBooking(String id, Booking booking) {
+  static Future<String> updateBooking(
+    String id,
+    Booking booking,
+    TaxiStats updatedTimeStats,
+  ) async {
+    String docId =
+        '${booking.taxiID}${DateFormat('ddMMMyyy').format(booking.bookingDateTimeStamp)}';
     return FirebaseFirestore.instance
-        .collection('manageBooking')
-        .doc(id)
-        .update(booking.toJson())
-        .then((value) => id);
+        .collection('todayStat')
+        .doc(docId)
+        .update(updatedTimeStats.toJson())
+        .then((_) {
+      return FirebaseFirestore.instance
+          .collection('manageBooking')
+          .doc(id)
+          .update(booking.toJson())
+          .then((value) => id);
+    });
   }
 
   static Future<Booking> getBooking(String id) {

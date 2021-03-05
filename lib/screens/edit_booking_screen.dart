@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:water_taxi_miami/models/booking.dart';
+import 'package:water_taxi_miami/models/taxi_detail.dart';
+import 'package:water_taxi_miami/models/taxi_stats.dart';
+import 'package:water_taxi_miami/providers/taxi_provider.dart';
 import 'package:water_taxi_miami/services/database_service.dart';
 
 import '../global.dart';
@@ -182,7 +186,11 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
           TextFormField(
             controller: _departureTimeController,
             keyboardType: TextInputType.datetime,
-            enabled: false,
+            enabled: true,
+            readOnly: true,
+            onTap: () {
+              _openDepartureDialog();
+            },
             decoration: InputDecoration(
               hintText: '00:00 AM',
               border: OutlineInputBorder(
@@ -210,7 +218,11 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
           TextFormField(
             controller: _returnTimeController,
             keyboardType: TextInputType.datetime,
-            enabled: false,
+            enabled: true,
+            readOnly: true,
+            onTap: () {
+              _openReturnDialog();
+            },
             decoration: InputDecoration(
               hintText: '00:00 AM',
               border: OutlineInputBorder(
@@ -307,6 +319,94 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     );
   }
 
+  void _openDepartureDialog() {
+    List<TaxiDetail> taxis = context.read<TaxiProvider>().taxis;
+    TaxiDetail taxi = taxis.firstWhere(
+      (element) => element.id == widget.booking.taxiID,
+      orElse: () => null,
+    );
+
+    if (taxi == null) {
+      logger.e('Some error in opening dialog');
+      return;
+    }
+
+    bool isWeekend =
+        [6, 7].contains(widget.booking.bookingDateTimeStamp.weekday);
+    List<String> timingsList =
+        isWeekend ? taxi.weekEndStartTiming : taxi.weekDayStartTiming;
+
+    AlertDialog alert = AlertDialog(
+      title: Text("Select Departing Time BS"),
+      content: ListView.builder(
+        shrinkWrap: true,
+        itemCount: timingsList.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(
+              timingsList.elementAt(index),
+            ),
+            onTap: () {
+              _departureTimeController.text = timingsList.elementAt(index);
+              Navigator.pop(context);
+            },
+          );
+        },
+      ),
+    );
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  void _openReturnDialog() {
+    List<TaxiDetail> taxis = context.read<TaxiProvider>().taxis;
+    TaxiDetail taxi = taxis.firstWhere(
+      (element) => element.id == widget.booking.taxiID,
+      orElse: () => null,
+    );
+
+    if (taxi == null) {
+      logger.e('Some error in opening dialog');
+      return;
+    }
+
+    bool isWeekend =
+        [6, 7].contains(widget.booking.bookingDateTimeStamp.weekday);
+    List<String> timingsList =
+        isWeekend ? taxi.weekEndReturnTiming : taxi.weekDayReturnTiming;
+
+    AlertDialog alert = AlertDialog(
+      title: Text("Select Departing Time MB"),
+      content: ListView.builder(
+        shrinkWrap: true,
+        itemCount: timingsList.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(
+              timingsList.elementAt(index),
+            ),
+            onTap: () {
+              _returnTimeController.text = timingsList.elementAt(index);
+              Navigator.pop(context);
+            },
+          );
+        },
+      ),
+    );
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
   bool isEmailPhoneValid() {
     return _emailController.text.isNotEmpty || _phoneController.text.isNotEmpty;
   }
@@ -317,6 +417,8 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
       return;
     }
 
+    Booking oldBooking = Booking.fromRealJson(widget.booking.toRealJson());
+
     widget.booking.customerName = _nameController.text;
     widget.booking.customerPhone = _phoneController.text;
     widget.booking.email = _emailController.text;
@@ -325,9 +427,57 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     widget.booking.adult = _adultCountController.text;
     widget.booking.minor = _minorCountController.text;
 
+    bool hasTripTimingChanged =
+        oldBooking.tripReturnTime != widget.booking.tripReturnTime ||
+            oldBooking.tripStartTime != widget.booking.tripReturnTime;
+
+    bool hasMinorAdultCountChanged = oldBooking.minor != widget.booking.minor ||
+        oldBooking.adult != widget.booking.adult;
+
+    List<TaxiStats> taxiStats = context.read<TaxiProvider>().taxiStats;
+    TaxiStats taxiStat = taxiStats?.firstWhere(
+      (e) => e.taxiID == widget.booking.taxiID,
+      orElse: () => null,
+    );
+
+    if (hasTripTimingChanged) {
+      TimingStat oldStartTimingStat = taxiStat.startTimingList
+          .firstWhere((e) => e.time == oldBooking.tripStartTime);
+      TimingStat oldReturnTimingStat = taxiStat.returnTimingList
+          .firstWhere((e) => e.time == oldBooking.tripReturnTime);
+      oldStartTimingStat.alreadyBooked -=
+          int.parse(oldBooking.adult) + int.parse(oldBooking.minor);
+      oldReturnTimingStat.alreadyBooked -=
+          int.parse(oldBooking.adult) + int.parse(oldBooking.minor);
+
+      TimingStat newStartTimingStat = taxiStat.startTimingList
+          .firstWhere((e) => e.time == widget.booking.tripStartTime);
+      TimingStat newReturnTimingStat = taxiStat.returnTimingList
+          .firstWhere((e) => e.time == widget.booking.tripReturnTime);
+      newStartTimingStat.alreadyBooked +=
+          int.parse(widget.booking.adult) + int.parse(widget.booking.minor);
+      newReturnTimingStat.alreadyBooked +=
+          int.parse(widget.booking.adult) + int.parse(widget.booking.minor);
+    } else if (hasMinorAdultCountChanged) {
+      int adultChange =
+          int.parse(widget.booking.adult) - int.parse(oldBooking.adult);
+      int minorChange =
+          int.parse(widget.booking.minor) - int.parse(oldBooking.minor);
+
+      TimingStat startTimingStat = taxiStat.startTimingList
+          .firstWhere((e) => e.time == oldBooking.tripStartTime);
+      TimingStat returnTimingStat = taxiStat.returnTimingList
+          .firstWhere((e) => e.time == oldBooking.tripReturnTime);
+      startTimingStat.alreadyBooked += adultChange + minorChange;
+      returnTimingStat.alreadyBooked += adultChange + minorChange;
+    }
+
     // Update bookings
     String ticketId = await FirestoreDBService.updateBooking(
-        widget.booking.ticketID, widget.booking);
+      widget.booking.ticketID,
+      widget.booking,
+      taxiStat,
+    );
 
     Navigator.pop(context);
   }
