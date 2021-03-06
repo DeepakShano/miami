@@ -170,11 +170,41 @@ class FirestoreDBService {
     });
   }
 
-  static Future<void> deleteBooking(String id) {
+  static Future<void> deleteBooking(Booking booking) {
+    String statsDocId =
+        '${booking.taxiID}${DateFormat('ddMMMyyy').format(booking.bookingDateTimeStamp)}';
+
     return FirebaseFirestore.instance
-        .collection('manageBooking')
-        .doc(id)
-        .delete();
+        .collection('todayStat')
+        .doc(statsDocId)
+        .get()
+        .then((snapshot) {
+      if (!snapshot.exists) {
+        logger.w('Today Stat document does not exist');
+        return Future.error('Today stat document does not exist');
+      }
+
+      TaxiStats taxiStat = TaxiStats.fromJson(snapshot.data());
+
+      TimingStat startTimingStat = taxiStat.startTimingList
+          .firstWhere((e) => e.time == booking.tripStartTime);
+      TimingStat returnTimingStat = taxiStat.returnTimingList
+          .firstWhere((e) => e.time == booking.tripReturnTime);
+
+      int adultMinorCount = int.parse(booking.adult) + int.parse(booking.minor);
+      startTimingStat.alreadyBooked -= adultMinorCount;
+      returnTimingStat.alreadyBooked -= adultMinorCount;
+
+      return FirebaseFirestore.instance
+          .collection('todayStat')
+          .doc(statsDocId)
+          .update(taxiStat.toJson());
+    }).then((value) {
+      return FirebaseFirestore.instance
+          .collection('manageBooking')
+          .doc(booking.ticketID)
+          .delete();
+    });
   }
 
   static Stream<TaxiStats> streamTaxiStats(String taxiId, DateTime date) {

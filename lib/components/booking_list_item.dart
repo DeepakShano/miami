@@ -5,13 +5,14 @@ class BookingListItem extends StatelessWidget {
   final Booking booking;
   final VoidCallback onQrTap;
   final VoidCallback onEditTap;
-  final Function(String bookingId) onDeleteTap;
+  final Function(Booking booking) onDeleteTap;
 
   const BookingListItem({
     Key key,
     this.booking,
     this.onQrTap,
-    this.onEditTap, this.onDeleteTap,
+    this.onEditTap,
+    this.onDeleteTap,
   }) : super(key: key);
 
   @override
@@ -103,7 +104,7 @@ class BookingListItem extends StatelessWidget {
                 Expanded(
                   child: FlatButton.icon(
                     onPressed: () {
-                      onDeleteTap(booking.ticketID);
+                      onDeleteTap(booking);
                     },
                     label: Text('Delete'),
                     icon: Icon(Icons.delete_outline),

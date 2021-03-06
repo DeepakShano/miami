@@ -354,6 +354,8 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       return;
     }
 
+    DateTime bookingDateTime = context.read<TaxiProvider>().date;
+
     Booking booking = Booking(
       ticketID: Uuid().v4(),
       customerName: _nameController.text,
@@ -366,10 +368,11 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       status: 'Pending',
       agentName: context.read<AppUserProvider>().appUser?.name,
       bookingAgentID: context.read<AppUserProvider>().appUser?.userID,
-      bookingDate: DateFormat('dd/MM/yyy').format(DateTime.now()),
-      bookingDateTimeStamp: DateTime.now(),
+      bookingDate: DateFormat('dd/MM/yyy').format(bookingDateTime),
+      bookingDateTimeStamp: bookingDateTime,
       comment: '',
       taxiID: widget.taxiId,
+      todayDateString: DateFormat('ddMMMyyy').format(bookingDateTime),
     );
 
     // Create new bookings

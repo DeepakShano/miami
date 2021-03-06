@@ -14,6 +14,7 @@ class Booking {
   String minor;
   String bookingDate;
   String ticketID;
+  String todayDateString;
 
   Booking({
     this.taxiID,
@@ -31,6 +32,7 @@ class Booking {
     this.minor,
     this.bookingDate,
     this.ticketID,
+    this.todayDateString,
   });
 
   Booking.fromJson(Map<String, dynamic> json) {
@@ -51,6 +53,7 @@ class Booking {
     minor = json['minor'];
     bookingDate = json['bookingDate'];
     ticketID = json['ticketID'];
+    todayDateString = json['todayDateString'];
   }
 
   Booking.fromRealJson(Map<String, dynamic> json) {
@@ -71,6 +74,7 @@ class Booking {
     minor = json['minor'];
     bookingDate = json['bookingDate'];
     ticketID = json['ticketID'];
+    todayDateString = json['todayDateString'];
   }
 
   Map<String, dynamic> toJson() {
@@ -90,6 +94,7 @@ class Booking {
     data['minor'] = this.minor;
     data['bookingDate'] = this.bookingDate;
     data['ticketID'] = this.ticketID;
+    data['todayDateString'] = this.todayDateString;
     return data;
   }
 
@@ -111,6 +116,7 @@ class Booking {
     data['minor'] = this.minor;
     data['bookingDate'] = this.bookingDate;
     data['ticketID'] = this.ticketID;
+    data['todayDateString'] = this.todayDateString;
     return data;
   }
 }

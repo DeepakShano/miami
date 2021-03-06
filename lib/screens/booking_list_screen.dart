@@ -71,11 +71,11 @@ class BookingListScreen extends StatelessWidget {
                               ),
                             );
                           },
-                          onDeleteTap: (String id) {
+                          onDeleteTap: (Booking booking) {
                             Widget okButton = FlatButton(
                               child: Text("Delete"),
                               onPressed: () {
-                                FirestoreDBService.deleteBooking(id);
+                                FirestoreDBService.deleteBooking(booking);
                                 Navigator.pop(context);
                               },
                             );
