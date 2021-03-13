@@ -60,6 +60,12 @@ class DashboardScreen extends StatelessWidget {
     DateTime date = context.watch<TaxiProvider>().date;
     String dateStr = DateFormat('dd-MMM-yyyy (EEEE)').format(date);
 
+    DateTime startOfToday = DateTime(
+      DateTime.now().year,
+      DateTime.now().month,
+      DateTime.now().day,
+    );
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
       child: GestureDetector(
@@ -67,8 +73,8 @@ class DashboardScreen extends StatelessWidget {
           DateTime selectedDate = await showDatePicker(
             context: context,
             initialDate: date ?? DateTime.now(),
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2025),
+            firstDate: DateTime.now(),
+            lastDate: DateTime.now().add(Duration(days: 365 * 100)),
           );
 
           if (selectedDate == null) return;

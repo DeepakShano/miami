@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -31,23 +33,21 @@ class FirestoreDBService {
     });
   }
 
-  static Future<AppUser> signUpUser(
-    String name,
-    String phoneNo,
-    String emailAddress,
-    String pinCode,
-  ) {
+  static Future<AppUser> signUpUser(String name,
+      String phoneNo,
+      String emailAddress,
+      String pinCode,) {
     String uid = Uuid().v4();
 
     AppUser appUser = AppUser(
       phone: phoneNo,
       name: name,
-      status: 'Pending',
+      status: Platform.isIOS ? 'Approved' : '',
       email: emailAddress,
       enrollDate: DateFormat('dd MMM, yyyy').format(DateTime.now()),
       userID: uid,
       userPin: pinCode,
-      userType: 'Agent',
+      userType: Platform.isIOS ? 'Normal' : '',
       fcmToken: '', // TODO: Missing default value
     );
 
@@ -83,11 +83,9 @@ class FirestoreDBService {
   }
 
   /// Returns booking ID
-  static Future<String> createBooking(
-    Booking booking,
-    TaxiStats updatedTaxiStats,
-    DateTime date,
-  ) {
+  static Future<String> createBooking(Booking booking,
+      TaxiStats updatedTaxiStats,
+      DateTime date,) {
     String bookingId = booking.ticketID ?? Uuid().v4();
 
     return FirebaseFirestore.instance
@@ -105,11 +103,9 @@ class FirestoreDBService {
   }
 
   /// Returns booking ID
-  static Future<String> updateBooking(
-    String id,
-    Booking booking,
-    TaxiStats updatedTimeStats,
-  ) async {
+  static Future<String> updateBooking(String id,
+      Booking booking,
+      TaxiStats updatedTimeStats,) async {
     String docId =
         '${booking.taxiID}${DateFormat('ddMMMyyy').format(booking.bookingDateTimeStamp)}';
     return FirebaseFirestore.instance
@@ -161,7 +157,7 @@ class FirestoreDBService {
   static Stream<List<Booking>> streamTickets(String agentId) {
     return FirebaseFirestore.instance
         .collection('manageBooking')
-        // .where('bookingDateTimeStamp', isGreaterThanOrEqualTo: DateTime.now())
+    // .where('bookingDateTimeStamp', isGreaterThanOrEqualTo: DateTime.now())
         .where('bookingAgentID', isEqualTo: agentId)
         .orderBy('bookingDateTimeStamp', descending: true)
         .snapshots()
@@ -226,10 +222,8 @@ class FirestoreDBService {
     });
   }
 
-  static Future<TaxiStats> generateNewTaxiStat(
-    TaxiDetail taxiDetail,
-    DateTime date,
-  ) {
+  static Future<TaxiStats> generateNewTaxiStat(TaxiDetail taxiDetail,
+      DateTime date,) {
     TaxiStats taxiStats = TaxiStats(
       taxiID: taxiDetail.id,
       name: taxiDetail.name,
