@@ -29,9 +29,10 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _adultCountController = TextEditingController();
   final TextEditingController _minorCountController = TextEditingController();
-  final TextEditingController _departureTimeController =
-      TextEditingController();
+  final TextEditingController _dptTimeController = TextEditingController();
   final TextEditingController _returnTimeController = TextEditingController();
+
+  bool isBtnLoading = false;
 
   @override
   void initState() {
@@ -40,7 +41,7 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     _emailController.text = widget.booking.email;
     _minorCountController.text = widget.booking.minor;
     _adultCountController.text = widget.booking.adult;
-    _departureTimeController.text = widget.booking.tripStartTime;
+    _dptTimeController.text = widget.booking.tripStartTime;
     _returnTimeController.text = widget.booking.tripReturnTime;
 
     super.initState();
@@ -64,10 +65,11 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
               Container(
                 width: MediaQuery.of(context).size.width,
                 child: RaisedButton(
-                  child: Text('Update'),
-                  onPressed: () {
-                    _onPressPrimaryBtn(context);
-                  },
+                  child: isBtnLoading
+                      ? CircularProgressIndicator()
+                      : Text('Update'),
+                  onPressed:
+                      isBtnLoading ? null : () => _onPressPrimaryBtn(context),
                   textColor: Colors.white,
                 ),
               ),
@@ -184,7 +186,7 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
           ),
           SizedBox(height: 10),
           TextFormField(
-            controller: _departureTimeController,
+            controller: _dptTimeController,
             keyboardType: TextInputType.datetime,
             enabled: true,
             readOnly: true,
@@ -347,7 +349,7 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
               timingsList.elementAt(index),
             ),
             onTap: () {
-              _departureTimeController.text = timingsList.elementAt(index);
+              _dptTimeController.text = timingsList.elementAt(index);
               Navigator.pop(context);
             },
           );
@@ -422,7 +424,7 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     widget.booking.customerName = _nameController.text;
     widget.booking.customerPhone = _phoneController.text;
     widget.booking.email = _emailController.text;
-    widget.booking.tripStartTime = _departureTimeController.text;
+    widget.booking.tripStartTime = _dptTimeController.text;
     widget.booking.tripReturnTime = _returnTimeController.text;
     widget.booking.adult = _adultCountController.text;
     widget.booking.minor = _minorCountController.text;
@@ -473,11 +475,13 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     }
 
     // Update bookings
+    setState(() => isBtnLoading = true);
     String ticketId = await FirestoreDBService.updateBooking(
       widget.booking.ticketID,
       widget.booking,
       taxiStat,
     );
+    setState(() => isBtnLoading = false);
 
     Navigator.pop(context);
   }

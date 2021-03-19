@@ -36,14 +36,15 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _adultCountController = TextEditingController();
   final TextEditingController _minorCountController = TextEditingController();
-  final TextEditingController _departureTimeController =
-      TextEditingController();
+  final TextEditingController _dptTimeController = TextEditingController();
   final TextEditingController _returnTimeController = TextEditingController();
+
+  bool isBtnLoading = false;
 
   @override
   void initState() {
     if (widget.selectedDepartTime != null) {
-      _departureTimeController.text = widget.selectedDepartTime;
+      _dptTimeController.text = widget.selectedDepartTime;
     }
 
     if (widget.selectedReturnTime != null) {
@@ -82,10 +83,11 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
               Container(
                 width: MediaQuery.of(context).size.width,
                 child: RaisedButton(
-                  child: Text('Submit'),
-                  onPressed: () {
-                    _onPressPrimaryBtn(context);
-                  },
+                  child: isBtnLoading
+                      ? CircularProgressIndicator()
+                      : Text('Submit'),
+                  onPressed:
+                      isBtnLoading ? null : () => _onPressPrimaryBtn(context),
                   textColor: Colors.white,
                 ),
               ),
@@ -202,7 +204,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
           ),
           SizedBox(height: 10),
           TextFormField(
-            controller: _departureTimeController,
+            controller: _dptTimeController,
             keyboardType: TextInputType.datetime,
             enabled: false,
             decoration: InputDecoration(
@@ -362,7 +364,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       customerPhone: _phoneController.text,
       email: _emailController.text,
       tripReturnTime: _returnTimeController.text,
-      tripStartTime: _departureTimeController.text,
+      tripStartTime: _dptTimeController.text,
       adult: _adultCountController.text,
       minor: _minorCountController.text,
       status: 'Pending',
@@ -391,11 +393,13 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
     returnTimingStat.alreadyBooked +=
         int.parse(booking.adult) + int.parse(booking.minor);
 
+    setState(() => isBtnLoading = true);
     String ticketId = await FirestoreDBService.createBooking(
       booking,
       taxiStat,
       context.read<TaxiProvider>().date,
     );
+    setState(() => isBtnLoading = false);
 
     Navigator.pop(context);
     Navigator.pop(context);
