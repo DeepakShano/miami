@@ -33,10 +33,12 @@ class FirestoreDBService {
     });
   }
 
-  static Future<AppUser> signUpUser(String name,
-      String phoneNo,
-      String emailAddress,
-      String pinCode,) {
+  static Future<AppUser> signUpUser(
+    String name,
+    String phoneNo,
+    String emailAddress,
+    String pinCode,
+  ) {
     String uid = Uuid().v4();
 
     AppUser appUser = AppUser(
@@ -83,9 +85,11 @@ class FirestoreDBService {
   }
 
   /// Returns booking ID
-  static Future<String> createBooking(Booking booking,
-      TaxiStats updatedTaxiStats,
-      DateTime date,) {
+  static Future<String> createBooking(
+    Booking booking,
+    TaxiStats updatedTaxiStats,
+    DateTime date,
+  ) {
     String bookingId = booking.ticketID ?? Uuid().v4();
 
     return FirebaseFirestore.instance
@@ -103,9 +107,11 @@ class FirestoreDBService {
   }
 
   /// Returns booking ID
-  static Future<String> updateBooking(String id,
-      Booking booking,
-      TaxiStats updatedTimeStats,) async {
+  static Future<String> updateBooking(
+    String id,
+    Booking booking,
+    TaxiStats updatedTimeStats,
+  ) async {
     String docId =
         '${booking.taxiID}${DateFormat('ddMMMyyy').format(booking.bookingDateTimeStamp)}';
     return FirebaseFirestore.instance
@@ -222,8 +228,10 @@ class FirestoreDBService {
     });
   }
 
-  static Future<TaxiStats> generateNewTaxiStat(TaxiDetail taxiDetail,
-      DateTime date,) {
+  static Future<TaxiStats> generateNewTaxiStat(
+    TaxiDetail taxiDetail,
+    DateTime date,
+  ) {
     TaxiStats taxiStats = TaxiStats(
       taxiID: taxiDetail.id,
       name: taxiDetail.name,

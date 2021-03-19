@@ -1,7 +1,8 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:uuid/uuid.dart';
 import 'package:water_taxi_miami/models/booking.dart';
 import 'package:water_taxi_miami/models/taxi_stats.dart';
 import 'package:water_taxi_miami/providers/app_user_provider.dart';
@@ -87,7 +88,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
                       ? CircularProgressIndicator()
                       : Text('Submit'),
                   onPressed:
-                      isBtnLoading ? null : () => _onPressPrimaryBtn(context),
+                  isBtnLoading ? null : () => _onPressPrimaryBtn(context),
                   textColor: Colors.white,
                 ),
               ),
@@ -184,7 +185,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
             validator: (value) {
               if (value.isNotEmpty) {
                 if (!RegExp(
-                        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
                     .hasMatch(value)) {
                   return 'Enter a valid email address';
                 }
@@ -340,7 +341,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
         _minorCountController.text.isEmpty)
       return false;
     else if (int.parse(_adultCountController.text) +
-            int.parse(_minorCountController.text) <=
+        int.parse(_minorCountController.text) <=
         0) return false;
 
     return true;
@@ -357,9 +358,10 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
     }
 
     DateTime bookingDateTime = context.read<TaxiProvider>().date;
+    String ticketId = _generateTicketId(_nameController.text);
 
     Booking booking = Booking(
-      ticketID: Uuid().v4(),
+      ticketID: ticketId,
       customerName: _nameController.text,
       customerPhone: _phoneController.text,
       email: _emailController.text,
@@ -380,7 +382,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
     // Create new bookings
     List<TaxiStats> taxiStats = context.read<TaxiProvider>().taxiStats;
     TaxiStats taxiStat = taxiStats?.firstWhere(
-      (e) => e.taxiID == widget.taxiId,
+          (e) => e.taxiID == widget.taxiId,
       orElse: () => null,
     );
 
@@ -394,7 +396,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
         int.parse(booking.adult) + int.parse(booking.minor);
 
     setState(() => isBtnLoading = true);
-    String ticketId = await FirestoreDBService.createBooking(
+    ticketId = await FirestoreDBService.createBooking(
       booking,
       taxiStat,
       context.read<TaxiProvider>().date,
@@ -409,5 +411,14 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
         builder: (context) => TicketBookedScreen(ticketId: ticketId),
       ),
     );
+  }
+
+  String _generateTicketId(String username) {
+    String randomNumber = '${1000 + Random().nextInt(9999 - 1000)}';
+    if (username.isNotEmpty && username.length >= 4) {
+      return '${username.substring(0, 4)}-$randomNumber';
+    } else {
+      return '${username.substring(0, username.length)}-$randomNumber';
+    }
   }
 }
