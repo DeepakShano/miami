@@ -1,4 +1,3 @@
-import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -64,7 +63,7 @@ class FirestoreDBService {
     return FirebaseFirestore.instance
         .collection('UserInfo')
         .where('userPin', isEqualTo: pinCode)
-        .where('status', isEqualTo: 'Approved')
+        // .where('status', isEqualTo: 'Approved')
         .get()
         .then((querySnapshot) {
       if (querySnapshot.size == 0) {
