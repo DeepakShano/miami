@@ -44,12 +44,12 @@ class FirestoreDBService {
     AppUser appUser = AppUser(
       phone: phoneNo,
       name: name,
-      status: Platform.isIOS ? 'Approved' : '',
+      status: 'Pending',
       email: emailAddress,
       enrollDate: DateFormat('dd MMM, yyyy').format(DateTime.now()),
       userID: uid,
       userPin: pinCode,
-      userType: Platform.isIOS ? 'Normal' : '',
+      userType: 'Agent',
       fcmToken: '', // TODO: Missing default value
     );
 
