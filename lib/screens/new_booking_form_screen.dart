@@ -372,7 +372,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       status: 'Pending',
       agentName: context.read<AppUserProvider>().appUser?.name,
       bookingAgentID: context.read<AppUserProvider>().appUser?.userID,
-      bookingDate: DateFormat('dd/MM/yyy').format(bookingDateTime),
+      bookingDate: DateFormat('ddMMMyyy').format(bookingDateTime),
       bookingDateTimeStamp: bookingDateTime,
       comment: '',
       taxiID: widget.taxiId,
