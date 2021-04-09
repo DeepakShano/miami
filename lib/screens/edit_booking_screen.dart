@@ -31,6 +31,7 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
   final TextEditingController _minorCountController = TextEditingController();
   final TextEditingController _dptTimeController = TextEditingController();
   final TextEditingController _returnTimeController = TextEditingController();
+  final TextEditingController _commentController = TextEditingController();
 
   bool isBtnLoading = false;
 
@@ -43,6 +44,7 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     _adultCountController.text = widget.booking.adult;
     _dptTimeController.text = widget.booking.tripStartTime;
     _returnTimeController.text = widget.booking.tripReturnTime;
+    _commentController.text = widget.booking.comment;
 
     super.initState();
   }
@@ -316,6 +318,28 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
               )
             ],
           ),
+          SizedBox(height: 20),
+          Text(
+            'Comment',
+            style: Theme.of(context).textTheme.bodyText2,
+          ),
+          SizedBox(height: 10),
+          TextFormField(
+            controller: _commentController,
+            keyboardType: TextInputType.multiline,
+            maxLines: null,
+            textCapitalization: TextCapitalization.sentences,
+            decoration: InputDecoration(
+              hintText: 'Comments',
+              border: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Theme.of(context).primaryColor,
+                  width: 1,
+                ),
+              ),
+            ),
+            textInputAction: TextInputAction.done,
+          ),
         ],
       ),
     );
@@ -428,6 +452,7 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     widget.booking.tripReturnTime = _returnTimeController.text;
     widget.booking.adult = _adultCountController.text;
     widget.booking.minor = _minorCountController.text;
+    widget.booking.comment = _commentController.text;
 
     bool hasTripTimingChanged =
         oldBooking.tripReturnTime != widget.booking.tripReturnTime ||

@@ -39,6 +39,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
   final TextEditingController _minorCountController = TextEditingController();
   final TextEditingController _dptTimeController = TextEditingController();
   final TextEditingController _returnTimeController = TextEditingController();
+  final TextEditingController _commentController = TextEditingController();
 
   bool isBtnLoading = false;
 
@@ -61,6 +62,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       _emailController.text = 'a@a.a';
       _minorCountController.text = '1';
       _adultCountController.text = '1';
+      _commentController.text = 'test test test';
     }
 
     super.initState();
@@ -88,7 +90,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
                       ? CircularProgressIndicator()
                       : Text('Submit'),
                   onPressed:
-                  isBtnLoading ? null : () => _onPressPrimaryBtn(context),
+                      isBtnLoading ? null : () => _onPressPrimaryBtn(context),
                   textColor: Colors.white,
                 ),
               ),
@@ -185,7 +187,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
             validator: (value) {
               if (value.isNotEmpty) {
                 if (!RegExp(
-                    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
                     .hasMatch(value)) {
                   return 'Enter a valid email address';
                 }
@@ -328,8 +330,30 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
                     ),
                   ],
                 ),
-              )
+              ),
             ],
+          ),
+          SizedBox(height: 20),
+          Text(
+            'Comment',
+            style: Theme.of(context).textTheme.bodyText2,
+          ),
+          SizedBox(height: 10),
+          TextFormField(
+            controller: _commentController,
+            textCapitalization: TextCapitalization.sentences,
+            keyboardType: TextInputType.multiline,
+            maxLines: null,
+            decoration: InputDecoration(
+              hintText: 'Comments',
+              border: OutlineInputBorder(
+                borderSide: BorderSide(
+                  color: Theme.of(context).primaryColor,
+                  width: 1,
+                ),
+              ),
+            ),
+            textInputAction: TextInputAction.done,
           ),
         ],
       ),
@@ -341,7 +365,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
         _minorCountController.text.isEmpty)
       return false;
     else if (int.parse(_adultCountController.text) +
-        int.parse(_minorCountController.text) <=
+            int.parse(_minorCountController.text) <=
         0) return false;
 
     return true;
@@ -374,7 +398,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       bookingAgentID: context.read<AppUserProvider>().appUser?.userID,
       bookingDate: DateFormat('ddMMMyyy').format(bookingDateTime),
       bookingDateTimeStamp: bookingDateTime,
-      comment: '',
+      comment: _commentController.text,
       taxiID: widget.taxiId,
       todayDateString: DateFormat('ddMMMyyy').format(bookingDateTime),
     );
