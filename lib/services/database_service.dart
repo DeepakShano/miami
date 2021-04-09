@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -162,7 +161,7 @@ class FirestoreDBService {
   static Stream<List<Booking>> streamTickets(String agentId) {
     return FirebaseFirestore.instance
         .collection('manageBooking')
-    // .where('bookingDateTimeStamp', isGreaterThanOrEqualTo: DateTime.now())
+        // .where('bookingDateTimeStamp', isGreaterThanOrEqualTo: DateTime.now())
         .where('bookingAgentID', isEqualTo: agentId)
         .orderBy('bookingDateTimeStamp', descending: true)
         .snapshots()
@@ -218,6 +217,25 @@ class FirestoreDBService {
         .where('todayDate', isEqualTo: dateStr)
         .snapshots()
         .map((querySnapshot) {
+      if (querySnapshot.size == 0) {
+        logger.d('No stats found for taxi ID $taxiId and date $dateStr');
+        return null;
+      }
+
+      return TaxiStats.fromJson(querySnapshot.docs.first.data());
+    });
+  }
+
+  static Future<TaxiStats> getTaxiStats(String taxiId, DateTime date) {
+    String dateStr = DateFormat('dd-MMM-yyyy').format(date);
+    logger.d('dateStr: $dateStr');
+
+    return FirebaseFirestore.instance
+        .collection('todayStat')
+        .where('taxiID', isEqualTo: taxiId)
+        .where('todayDate', isEqualTo: dateStr)
+        .get()
+        .then((querySnapshot) {
       if (querySnapshot.size == 0) {
         logger.d('No stats found for taxi ID $taxiId and date $dateStr');
         return null;

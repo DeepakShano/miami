@@ -368,14 +368,44 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
         shrinkWrap: true,
         itemCount: timingsList.length,
         itemBuilder: (context, index) {
+          String timingStr = timingsList.elementAt(index);
+          bool canSelect = true;
+
+          DateTime now = DateTime.now();
+          DateTime nextDateStart = DateTime(now.year, now.month, now.day);
+
+          // If booking is of today. Hide/Untappable timings that are in past.
+          if (widget.booking.bookingDateTimeStamp.difference(nextDateStart) <
+              Duration(days: 1))
+            try {
+              int h = int.parse(timingStr.split(':').first);
+              int m = int.parse(timingStr.split(':')[1].substring(0, 2));
+              String meridian = timingStr.split(':')[1].substring(3, 5);
+
+              if (meridian.toLowerCase() == 'pm' && h != 12) {
+                h = h + 12;
+              }
+
+              TimeOfDay i = TimeOfDay(hour: h, minute: m);
+
+              logger.d(i.toString());
+
+              canSelect = i.compareTo(TimeOfDay.now()) == -1 ? false : true;
+            } catch (e) {
+              logger.e(e);
+            }
+
           return ListTile(
+            enabled: canSelect,
             title: Text(
               timingsList.elementAt(index),
             ),
-            onTap: () {
-              _dptTimeController.text = timingsList.elementAt(index);
-              Navigator.pop(context);
-            },
+            onTap: !canSelect
+                ? null
+                : () {
+                    _dptTimeController.text = timingsList.elementAt(index);
+                    Navigator.pop(context);
+                  },
           );
         },
       ),
@@ -412,14 +442,44 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
         shrinkWrap: true,
         itemCount: timingsList.length,
         itemBuilder: (context, index) {
+          String timingStr = timingsList.elementAt(index);
+          bool canSelect = true;
+
+          DateTime now = DateTime.now();
+          DateTime nextDateStart = DateTime(now.year, now.month, now.day);
+
+          // If booking is of today. Hide/Untappable timings that are in past.
+          if (widget.booking.bookingDateTimeStamp.difference(nextDateStart) <
+              Duration(days: 1))
+            try {
+              int h = int.parse(timingStr.split(':').first);
+              int m = int.parse(timingStr.split(':')[1].substring(0, 2));
+              String meridian = timingStr.split(':')[1].substring(3, 5);
+
+              if (meridian.toLowerCase() == 'pm' && h != 12) {
+                h = h + 12;
+              }
+
+              TimeOfDay i = TimeOfDay(hour: h, minute: m);
+
+              logger.d(i.toString());
+
+              canSelect = i.compareTo(TimeOfDay.now()) == -1 ? false : true;
+            } catch (e) {
+              logger.e(e);
+            }
+
           return ListTile(
+            enabled: canSelect,
             title: Text(
               timingsList.elementAt(index),
             ),
-            onTap: () {
-              _returnTimeController.text = timingsList.elementAt(index);
-              Navigator.pop(context);
-            },
+            onTap: !canSelect
+                ? null
+                : () {
+                    _returnTimeController.text = timingsList.elementAt(index);
+                    Navigator.pop(context);
+                  },
           );
         },
       ),
@@ -461,10 +521,9 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     bool hasMinorAdultCountChanged = oldBooking.minor != widget.booking.minor ||
         oldBooking.adult != widget.booking.adult;
 
-    List<TaxiStats> taxiStats = context.read<TaxiProvider>().taxiStats;
-    TaxiStats taxiStat = taxiStats?.firstWhere(
-      (e) => e.taxiID == widget.booking.taxiID,
-      orElse: () => null,
+    TaxiStats taxiStat = await FirestoreDBService.getTaxiStats(
+      widget.booking.taxiID,
+      widget.booking.bookingDateTimeStamp,
     );
 
     if (hasTripTimingChanged) {
@@ -509,5 +568,16 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     setState(() => isBtnLoading = false);
 
     Navigator.pop(context);
+  }
+}
+
+extension TimeOfDayExtension on TimeOfDay {
+  /// Returns -1 if [other] is bigger.
+  int compareTo(TimeOfDay other) {
+    if (this.hour < other.hour) return -1;
+    if (this.hour > other.hour) return 1;
+    if (this.minute < other.minute) return -1;
+    if (this.minute > other.minute) return 1;
+    return 0;
   }
 }
