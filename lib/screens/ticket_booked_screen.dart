@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share/share.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:water_taxi_miami/global.dart';
 import 'package:water_taxi_miami/models/booking.dart';
 import 'package:water_taxi_miami/services/database_service.dart';
 
-class TicketBookedScreen extends StatelessWidget {
+class TicketBookedScreen extends StatefulWidget {
   final String ticketId;
 
   TicketBookedScreen({
@@ -12,6 +14,11 @@ class TicketBookedScreen extends StatelessWidget {
     @required this.ticketId,
   }) : super(key: key);
 
+  @override
+  _TicketBookedScreenState createState() => _TicketBookedScreenState();
+}
+
+class _TicketBookedScreenState extends State<TicketBookedScreen> {
   Booking booking;
 
   @override
@@ -29,7 +36,7 @@ class TicketBookedScreen extends StatelessWidget {
         ],
       ),
       body: FutureBuilder<Booking>(
-        future: FirestoreDBService.getBooking(ticketId),
+        future: FirestoreDBService.getBooking(widget.ticketId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
@@ -61,11 +68,22 @@ class TicketBookedScreen extends StatelessWidget {
                 width: MediaQuery.of(context).size.width,
                 padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
                 child: RaisedButton(
+                  child: Text('Message ticket to client'),
+                  onPressed: () {
+                    _onPressSecondaryBtn(context, booking);
+                  },
+                  textColor: Colors.white,
+                ),
+              ),
+              SizedBox(height: 20),
+              Container(
+                width: MediaQuery.of(context).size.width,
+                padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+                child: OutlineButton(
                   child: Text('Done'),
                   onPressed: () {
                     _onPressPrimaryBtn(context);
                   },
-                  textColor: Colors.white,
                 ),
               ),
             ],
@@ -77,6 +95,16 @@ class TicketBookedScreen extends StatelessWidget {
 
   Future<void> _onPressPrimaryBtn(BuildContext context) async {
     Navigator.pop(context);
+  }
+
+  Future<void> _onPressSecondaryBtn(BuildContext context, Booking b) async {
+    String uri =
+        Uri.encodeFull('sms:${b?.customerPhone}?body=${generateShareText(b)}');
+    if (await canLaunch(uri)) {
+      await launch(uri);
+    } else {
+      logger.e('Could not launch $uri');
+    }
   }
 
   Future<void> _onPressShareBtn(BuildContext context) async {
