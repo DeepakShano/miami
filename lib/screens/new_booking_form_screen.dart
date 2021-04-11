@@ -406,7 +406,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
     // Create new bookings
     List<TaxiStats> taxiStats = context.read<TaxiProvider>().taxiStats;
     TaxiStats taxiStat = taxiStats?.firstWhere(
-          (e) => e.taxiID == widget.taxiId,
+      (e) => e.taxiID == widget.taxiId,
       orElse: () => null,
     );
 
@@ -414,6 +414,25 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
         .firstWhere((e) => e.time == booking.tripStartTime);
     TimingStat returnTimingStat = taxiStat.returnTimingList
         .firstWhere((e) => e.time == booking.tripReturnTime);
+
+    int totalStartTimingTickets = startTimingStat.alreadyBooked +
+        int.parse(booking.adult) +
+        int.parse(booking.minor);
+    int totalReturnTimingTickets = returnTimingStat.alreadyBooked +
+        int.parse(booking.adult) +
+        int.parse(booking.minor);
+
+    if (taxiStat.totalSeats < totalStartTimingTickets ||
+        taxiStat.totalSeats < totalReturnTimingTickets) {
+      final snackBar = SnackBar(
+        content: Text('Cannot book more seats than available.'),
+        backgroundColor: Theme.of(context).errorColor,
+      );
+
+      _scaffoldKey.currentState.showSnackBar(snackBar);
+      return;
+    }
+
     startTimingStat.alreadyBooked +=
         int.parse(booking.adult) + int.parse(booking.minor);
     returnTimingStat.alreadyBooked +=
