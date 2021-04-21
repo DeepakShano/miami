@@ -4,6 +4,7 @@ import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:water_taxi_miami/global.dart';
 import 'package:water_taxi_miami/models/booking.dart';
+import 'package:water_taxi_miami/screens/log_in_screen.dart';
 import 'package:water_taxi_miami/services/database_service.dart';
 
 class TicketBookedScreen extends StatefulWidget {
@@ -94,7 +95,10 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
   }
 
   Future<void> _onPressPrimaryBtn(BuildContext context) async {
-    Navigator.pop(context);
+    Navigator.of(context).popUntil((route) => false);
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => LogInScreen()),
+    );
   }
 
   Future<void> _onPressSecondaryBtn(BuildContext context, Booking b) async {
