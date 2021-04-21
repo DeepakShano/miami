@@ -5,9 +5,11 @@ import 'package:water_taxi_miami/models/app_user.dart';
 import 'package:water_taxi_miami/providers/app_user_provider.dart';
 import 'package:water_taxi_miami/screens/dashboard_screen.dart';
 import 'package:water_taxi_miami/screens/sign_up_screen.dart';
+import 'package:water_taxi_miami/services/database_service.dart';
 
-import '../auth_service.dart';
 import '../global.dart';
+import '../services/auth_service.dart';
+import 'crew_dashboard_screen.dart';
 
 class LogInScreen extends StatelessWidget {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -122,7 +124,11 @@ class LogInScreen extends StatelessWidget {
       return;
     }
 
-    // Sign up user
+    // Check if pin belongs to crew
+    bool isPinForCrew =
+        await FirestoreDBService.isPinReservedForCrew(_pinController.text);
+
+    // Sign in user
     AppUser user =
         await AuthService.loginUser(_pinController.text).catchError((error) {
       if (error.runtimeType == String) {
@@ -137,8 +143,20 @@ class LogInScreen extends StatelessWidget {
 
     if (user != null) {
       context.read<AppUserProvider>().appUser = user;
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => DashboardScreen()));
+
+      if (isPinForCrew) {
+        // Go to crew's dashboard
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => CrewDashboardScreen()),
+        );
+      } else {
+        // Go to normal dashboard
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => DashboardScreen()),
+        );
+      }
     }
   }
 }

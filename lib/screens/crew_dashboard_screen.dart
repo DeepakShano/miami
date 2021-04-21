@@ -1,20 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:water_taxi_miami/components/app_drawer.dart';
 import 'package:water_taxi_miami/components/taxi_expansion_panel.dart';
 import 'package:water_taxi_miami/models/taxi_detail.dart';
 import 'package:water_taxi_miami/providers/taxi_provider.dart';
+import 'package:water_taxi_miami/screens/crew_booking_list_screen.dart';
 import 'package:water_taxi_miami/screens/message_screen.dart';
-import 'package:water_taxi_miami/screens/return_time_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class CrewDashboardScreen extends StatefulWidget {
+  @override
+  _CrewDashboardScreenState createState() => _CrewDashboardScreenState();
+}
+
+class _CrewDashboardScreenState extends State<CrewDashboardScreen> {
+  int radioGroupValue = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text('Dashboard'),
+        title: Text('Crew Dashboard'),
         actions: [
           IconButton(
             icon: Icon(Icons.notifications_active_outlined),
@@ -34,6 +42,8 @@ class DashboardScreen extends StatelessWidget {
             SizedBox(height: 40),
             _datePicker(context),
             SizedBox(height: 20),
+            _radioSelector(context),
+            SizedBox(height: 20),
             Consumer<TaxiProvider>(
               builder: (context, value, child) {
                 List<TaxiDetail> taxiDetails = value.taxis;
@@ -48,14 +58,13 @@ class DashboardScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                   child: TaxiExpansionPanelList(
                     taxiDetails: taxiDetails,
-                    showDepartureTime: true,
-                    onTap: (TaxiDetail taxiDetail, String time) {
-                      Navigator.push(
-                        context,
+                    showDepartureTime: radioGroupValue == 0,
+                    onTap: (TaxiDetail taxi, String time) {
+                      Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (context) => ReturnTimeScreen(
-                            taxiId: taxiDetail.id,
-                            selectedDepartTime: time,
+                          builder: (context) => CrewBookingListScreen(
+                            taxiId: taxi.id,
+                            time: time,
                           ),
                         ),
                       );
@@ -73,13 +82,7 @@ class DashboardScreen extends StatelessWidget {
 
   Widget _datePicker(BuildContext context) {
     DateTime date = context.watch<TaxiProvider>().date;
-    String dateStr = DateFormat('dd-MMM-yyyy (EEEE)').format(date);
-
-    DateTime startOfToday = DateTime(
-      DateTime.now().year,
-      DateTime.now().month,
-      DateTime.now().day,
-    );
+    String dateStr = DateFormat('MMM dd, yyyy (EEEE)').format(date);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -116,6 +119,54 @@ class DashboardScreen extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _radioSelector(BuildContext context) {
+    List<String> labels = ['Bayside Departure', 'Miami Beach'];
+
+    return Wrap(
+      spacing: 10,
+      children: List<Widget>.generate(
+        labels.length,
+        (int index) {
+          bool isSelected = radioGroupValue == index;
+
+          return ChoiceChip(
+            label: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                isSelected
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 5),
+                        child: Icon(
+                          Icons.done,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                      )
+                    : Container(height: 24),
+                Text(
+                  '${labels.elementAt(index)}',
+                  style: Theme.of(context).textTheme.bodyText1.copyWith(
+                        color:
+                            isSelected ? Theme.of(context).primaryColor : null,
+                      ),
+                ),
+              ],
+            ),
+            padding: EdgeInsets.all(10),
+            selected: isSelected,
+            onSelected: (bool selected) {
+              if (selected && !isSelected) {
+                setState(() {
+                  radioGroupValue = index;
+                });
+              }
+            },
+          );
+        },
+      ).toList(),
     );
   }
 }

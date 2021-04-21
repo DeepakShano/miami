@@ -27,59 +27,37 @@ class BookingListItem extends StatelessWidget {
             SizedBox(height: 16),
             Text(
               'Booking Name: ${booking.customerName}',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .bodyText1,
+              style: Theme.of(context).textTheme.bodyText1,
             ),
             SizedBox(height: 8),
             Text(
               'Booking Date: ${booking.bookingDate}',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .bodyText1,
+              style: Theme.of(context).textTheme.bodyText1,
             ),
             SizedBox(height: 8),
             Text(
               'Start Time: ${booking.tripStartTime}',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .bodyText1,
+              style: Theme.of(context).textTheme.bodyText1,
             ),
             SizedBox(height: 8),
             Text(
               'Return Time: ${booking.tripReturnTime}',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .bodyText1,
+              style: Theme.of(context).textTheme.bodyText1,
             ),
             SizedBox(height: 8),
             Text(
-              'Total Passenger: ${int.parse(booking.adult) +
-                  int.parse(booking.minor)}',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .bodyText1,
+              'Total Passenger: ${int.parse(booking.adult) + int.parse(booking.minor)}',
+              style: Theme.of(context).textTheme.bodyText1,
             ),
             SizedBox(height: 8),
             Text(
               'Adults: ${booking.adult}',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .bodyText1,
+              style: Theme.of(context).textTheme.bodyText1,
             ),
             SizedBox(height: 8),
             Text(
               'Minors: ${booking.minor}',
-              style: Theme
-                  .of(context)
-                  .textTheme
-                  .bodyText1,
+              style: Theme.of(context).textTheme.bodyText1,
             ),
             SizedBox(height: 16),
             Row(
@@ -96,21 +74,19 @@ class BookingListItem extends StatelessWidget {
                     onPressed: onEditTap,
                     label: Text('Edit'),
                     icon: Icon(Icons.edit_outlined),
-                    textColor: Theme
-                        .of(context)
-                        .primaryColor,
+                    textColor: Theme.of(context).primaryColor,
                   ),
                 ),
                 Expanded(
                   child: FlatButton.icon(
-                    onPressed: () {
-                      onDeleteTap(booking);
-                    },
+                    onPressed: onDeleteTap != null
+                        ? () {
+                            onDeleteTap(booking);
+                          }
+                        : null,
                     label: Text('Delete'),
                     icon: Icon(Icons.delete_outline),
-                    textColor: Theme
-                        .of(context)
-                        .errorColor,
+                    textColor: Theme.of(context).errorColor,
                   ),
                 ),
               ],

@@ -14,7 +14,17 @@ class AuthService {
   }
 
   static Future<AppUser> signUpUser(
-      String name, String phoneNo, String emailAddress, String pinCode) async {
+    String name,
+    String phoneNo,
+    String emailAddress,
+    String pinCode,
+  ) async {
+    // Check if pin matches reserved pin
+    if (await FirestoreDBService.isPinReservedForCrew(pinCode)) {
+      logger.d('Pin code reserved for Crew.');
+      return Future.error('Pin code is reserved. Try another pin.');
+    }
+
     if (!(await FirestoreDBService.isPinCodeUnique(pinCode))) {
       logger.d('Pin code is not unique. Could not sign up user.');
       return Future.error('Pin code is not unique. Could not register user.');

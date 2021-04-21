@@ -3,14 +3,17 @@ import 'package:provider/provider.dart';
 import 'package:water_taxi_miami/models/taxi_detail.dart';
 import 'package:water_taxi_miami/models/taxi_stats.dart';
 import 'package:water_taxi_miami/providers/taxi_provider.dart';
-import 'package:water_taxi_miami/screens/return_time_screen.dart';
 
 class TaxiExpansionPanelList extends StatefulWidget {
   final List<TaxiDetail> taxiDetails;
+  final bool showDepartureTime;
+  final Function(TaxiDetail, String) onTap;
 
   const TaxiExpansionPanelList({
     Key key,
     @required this.taxiDetails,
+    this.showDepartureTime = true,
+    this.onTap,
   }) : super(key: key);
 
   @override
@@ -50,9 +53,16 @@ class _TaxiExpansionPanelListState extends State<TaxiExpansionPanelList> {
     bool isWeekend =
         [6, 7].contains(context.watch<TaxiProvider>().date.weekday);
 
-    List<String> departTimings = isWeekend
-        ? taxiDetail.weekEndStartTiming
-        : taxiDetail.weekDayStartTiming;
+    List<String> timings;
+    if (widget.showDepartureTime) {
+      timings = isWeekend
+          ? taxiDetail.weekEndStartTiming
+          : taxiDetail.weekDayStartTiming;
+    } else {
+      timings = isWeekend
+          ? taxiDetail.weekEndReturnTiming
+          : taxiDetail.weekDayReturnTiming;
+    }
 
     List<TaxiStats> taxiStats = context.watch<TaxiProvider>().taxiStats;
     TaxiStats taxiStat = taxiStats?.firstWhere(
@@ -74,37 +84,28 @@ class _TaxiExpansionPanelListState extends State<TaxiExpansionPanelList> {
       body: ListView.builder(
         shrinkWrap: true,
         physics: NeverScrollableScrollPhysics(),
-        itemCount: departTimings.length,
+        itemCount: timings.length,
         itemBuilder: (context, index) {
-          String departTiming = departTimings.elementAt(index);
+          String timeStr = timings.elementAt(index);
 
           int seatsBooked = departTimingStats
-              ?.firstWhere((e) => e.time == departTiming, orElse: () => null)
+              ?.firstWhere((e) => e.time == timeStr, orElse: () => null)
               ?.alreadyBooked;
           int seatsLeft = taxiDetail.totalSeats - (seatsBooked ?? 0);
 
           return InkWell(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ReturnTimeScreen(
-                    taxiId: taxiDetail.id,
-                    selectedDepartTime: departTiming,
-                  ),
-                ),
-              );
-            },
+            onTap: () =>
+                widget.onTap != null ? widget.onTap(taxiDetail, timeStr) : null,
             child: ListTile(
               title: Text(
-                departTiming ?? '-',
+                timeStr ?? '-',
                 style: Theme.of(context)
                     .textTheme
                     .subtitle1
                     .copyWith(color: Colors.black87),
               ),
               subtitle: Text(
-                'Departure Time',
+                widget.showDepartureTime ? 'Departure Time' : 'Return Time',
                 style: Theme.of(context)
                     .textTheme
                     .caption

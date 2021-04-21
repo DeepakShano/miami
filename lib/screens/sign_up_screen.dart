@@ -1,16 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:water_taxi_miami/auth_service.dart';
 import 'package:water_taxi_miami/global.dart';
 import 'package:water_taxi_miami/models/app_user.dart';
+import 'package:water_taxi_miami/services/auth_service.dart';
 
-class SignUpScreen extends StatelessWidget {
+class SignUpScreen extends StatefulWidget {
+  @override
+  _SignUpScreenState createState() => _SignUpScreenState();
+}
+
+class _SignUpScreenState extends State<SignUpScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _pinController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    if (DEBUG) {
+      _firstNameController.text = 'Test Example';
+      _phoneController.text = '9895952623';
+      _emailController.text = 'a@a.a';
+      _pinController.text = '9999';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

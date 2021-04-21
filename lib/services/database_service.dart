@@ -31,6 +31,22 @@ class FirestoreDBService {
     });
   }
 
+  /// Returns true if [pinCode] matches crew's pin code. Otherwise returns false.
+  static Future<bool> isPinReservedForCrew(String pinCode) {
+    return FirebaseFirestore.instance
+        .collection('metadata')
+        .doc('login')
+        .get()
+        .then((docSnapshot) {
+      if (!docSnapshot.exists || !docSnapshot.data().containsKey('crewPin')) {
+        logger.d('No reserved pin found for crew.');
+        return false;
+      }
+
+      return docSnapshot.data()['crewPin'] == pinCode;
+    });
+  }
+
   static Future<AppUser> signUpUser(
     String name,
     String phoneNo,
@@ -140,22 +156,47 @@ class FirestoreDBService {
     });
   }
 
-  static Future<AdminMessage> getAdminMessage(DateTime date) {
-    String dateStr = DateFormat('dd/MM/yyyy').format(date);
+  static Future<List<Booking>> getBookingForCrew(
+    String taxiId,
+    DateTime bookingDate,
+    String startTime,
+    String endTime,
+  ) async {
+    final String dateStr = DateFormat('ddMMMyyy').format(bookingDate);
+    final Query commonQuery = FirebaseFirestore.instance
+        .collection('manageBooking')
+        .where('taxiID', isEqualTo: taxiId)
+        .where('bookingDate', isEqualTo: dateStr);
 
-    return FirebaseFirestore.instance
-        .collection('adminMessage')
-        .where('messageDate', isEqualTo: dateStr)
-        .limit(1)
+    List<Booking> startTimeBookings = await commonQuery
+        .where('tripStartTime', isEqualTo: startTime)
         .get()
-        .then((value) {
-      if (value.size == 0) {
-        logger.d('No message of day found for date $dateStr');
-        return null;
+        .then((QuerySnapshot querySnapshot) {
+      if (querySnapshot.size == 0) {
+        logger.d('No bookings matching $dateStr, $startTime');
+        return [];
       }
 
-      return AdminMessage.fromJson(value.docs.first.data());
+      return querySnapshot.docs
+          .map<Booking>((e) => Booking.fromJson(e.data()))
+          .toList();
     });
+
+    List<Booking> returnTimeBookings = await commonQuery
+        .where('tripReturnTime', isEqualTo: startTime)
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      if (querySnapshot.size == 0) {
+        logger.d('No bookings matching $dateStr, $startTime');
+        return [];
+      }
+
+      return querySnapshot.docs
+          .map<Booking>((e) => Booking.fromJson(e.data()))
+          .toList();
+    });
+
+    return <Booking>[...startTimeBookings, ...returnTimeBookings];
   }
 
   static Stream<List<Booking>> streamTickets(String agentId) {
@@ -204,6 +245,24 @@ class FirestoreDBService {
           .collection('manageBooking')
           .doc(booking.ticketID)
           .delete();
+    });
+  }
+
+  static Future<AdminMessage> getAdminMessage(DateTime date) {
+    String dateStr = DateFormat('dd/MM/yyyy').format(date);
+
+    return FirebaseFirestore.instance
+        .collection('adminMessage')
+        .where('messageDate', isEqualTo: dateStr)
+        .limit(1)
+        .get()
+        .then((value) {
+      if (value.size == 0) {
+        logger.d('No message of day found for date $dateStr');
+        return null;
+      }
+
+      return AdminMessage.fromJson(value.docs.first.data());
     });
   }
 
