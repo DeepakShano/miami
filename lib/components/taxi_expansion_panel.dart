@@ -69,7 +69,12 @@ class _TaxiExpansionPanelListState extends State<TaxiExpansionPanelList> {
       (element) => element.taxiID == taxiDetail.id,
       orElse: () => null,
     );
-    List<TimingStat> departTimingStats = taxiStat?.startTimingList;
+    List<TimingStat> timingStats;
+    if (widget.showDepartureTime) {
+      timingStats = taxiStat?.startTimingList;
+    } else {
+      timingStats = taxiStat?.returnTimingList;
+    }
 
     return ExpansionPanel(
       isExpanded: isExpanded,
@@ -88,7 +93,7 @@ class _TaxiExpansionPanelListState extends State<TaxiExpansionPanelList> {
         itemBuilder: (context, index) {
           String timeStr = timings.elementAt(index);
 
-          int seatsBooked = departTimingStats
+          int seatsBooked = timingStats
               ?.firstWhere((e) => e.time == timeStr, orElse: () => null)
               ?.alreadyBooked;
           int seatsLeft = taxiDetail.totalSeats - (seatsBooked ?? 0);
@@ -124,7 +129,7 @@ class _TaxiExpansionPanelListState extends State<TaxiExpansionPanelList> {
                   Icon(
                     Icons.chevron_right,
                     color: Theme.of(context).primaryColor,
-                  )
+                  ),
                 ],
               ),
             ),
