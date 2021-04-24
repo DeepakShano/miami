@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:water_taxi_miami/components/app_drawer.dart';
@@ -8,6 +9,7 @@ import 'package:water_taxi_miami/models/taxi_detail.dart';
 import 'package:water_taxi_miami/providers/taxi_provider.dart';
 import 'package:water_taxi_miami/screens/crew_booking_list_screen.dart';
 import 'package:water_taxi_miami/screens/message_screen.dart';
+import 'package:water_taxi_miami/screens/scanner_booking_detail_screen.dart';
 
 class CrewDashboardScreen extends StatefulWidget {
   @override
@@ -15,15 +17,51 @@ class CrewDashboardScreen extends StatefulWidget {
 }
 
 class _CrewDashboardScreenState extends State<CrewDashboardScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   int radioGroupValue = 0;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         centerTitle: true,
         title: Text('Crew Dashboard'),
         actions: [
+          IconButton(
+            icon: Icon(Icons.qr_code_scanner),
+            onPressed: () async {
+              String scannerResult = await FlutterBarcodeScanner.scanBarcode(
+                '#F88546',
+                'Cancel',
+                true,
+                ScanMode.QR,
+              );
+
+              if (scannerResult == null || scannerResult == '-1') {
+                _scaffoldKey.currentState.showSnackBar(
+                  SnackBar(
+                    content: Text('Invalid QR code. Please try again.'),
+                    backgroundColor: Theme
+                        .of(context)
+                        .errorColor,
+                  ),
+                );
+                return;
+              }
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      ScannerBookingDetailScreen(
+                        barcodeResult: scannerResult,
+                      ),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: Icon(Icons.notifications_active_outlined),
             onPressed: () {
@@ -129,7 +167,7 @@ class _CrewDashboardScreenState extends State<CrewDashboardScreen> {
       spacing: 10,
       children: List<Widget>.generate(
         labels.length,
-        (int index) {
+            (int index) {
           bool isSelected = radioGroupValue == index;
 
           return ChoiceChip(
@@ -139,19 +177,19 @@ class _CrewDashboardScreenState extends State<CrewDashboardScreen> {
               children: [
                 isSelected
                     ? Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: Icon(
-                          Icons.done,
-                          color: Theme.of(context).primaryColor,
-                        ),
-                      )
+                  padding: const EdgeInsets.only(right: 5),
+                  child: Icon(
+                    Icons.done,
+                    color: Theme.of(context).primaryColor,
+                  ),
+                )
                     : Container(height: 24),
                 Text(
                   '${labels.elementAt(index)}',
                   style: Theme.of(context).textTheme.bodyText1.copyWith(
-                        color:
-                            isSelected ? Theme.of(context).primaryColor : null,
-                      ),
+                    color:
+                    isSelected ? Theme.of(context).primaryColor : null,
+                  ),
                 ),
               ],
             ),
