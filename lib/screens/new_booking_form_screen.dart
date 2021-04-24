@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
@@ -90,7 +91,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
                       ? CircularProgressIndicator()
                       : Text('Submit'),
                   onPressed:
-                      isBtnLoading ? null : () => _onPressPrimaryBtn(context),
+                  isBtnLoading ? null : () => _onPressPrimaryBtn(context),
                   textColor: Colors.white,
                 ),
               ),
@@ -187,7 +188,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
             validator: (value) {
               if (value.isNotEmpty) {
                 if (!RegExp(
-                        r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
+                    r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+")
                     .hasMatch(value)) {
                   return 'Enter a valid email address';
                 }
@@ -365,7 +366,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
         _minorCountController.text.isEmpty)
       return false;
     else if (int.parse(_adultCountController.text) +
-            int.parse(_minorCountController.text) <=
+        int.parse(_minorCountController.text) <=
         0) return false;
 
     return true;
@@ -401,12 +402,13 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       comment: _commentController.text,
       taxiID: widget.taxiId,
       todayDateString: DateFormat('ddMMMyyy').format(bookingDateTime),
+      device: Platform.isAndroid ? 'android' : 'ios',
     );
 
     // Create new bookings
     List<TaxiStats> taxiStats = context.read<TaxiProvider>().taxiStats;
     TaxiStats taxiStat = taxiStats?.firstWhere(
-      (e) => e.taxiID == widget.taxiId,
+          (e) => e.taxiID == widget.taxiId,
       orElse: () => null,
     );
 
