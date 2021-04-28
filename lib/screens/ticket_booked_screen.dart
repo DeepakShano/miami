@@ -1,6 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share/share.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,6 +28,15 @@ class TicketBookedScreen extends StatefulWidget {
 
 class _TicketBookedScreenState extends State<TicketBookedScreen> {
   Booking booking;
+  Future<Booking> f;
+  GlobalKey key;
+
+  @override
+  void initState() {
+    super.initState();
+    key = GlobalKey();
+    f = FirestoreDBService.getBooking(widget.ticketId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,13 +47,13 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
           IconButton(
             icon: Icon(Icons.share_outlined),
             onPressed: () {
-              _onPressShareBtn(context);
+              _onPressShareBtn(context, booking);
             },
           ),
         ],
       ),
       body: FutureBuilder<Booking>(
-        future: FirestoreDBService.getBooking(widget.ticketId),
+        future: f,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
@@ -51,7 +65,7 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
             );
           }
 
-          Booking booking = snapshot.data;
+          booking = snapshot.data;
 
           return Column(
             children: [
@@ -61,10 +75,22 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
                 style: Theme.of(context).textTheme.headline6,
               ),
               SizedBox(height: 40),
-              QrImage(
-                data: generateQRData(booking),
-                version: QrVersions.auto,
-                size: 250.0,
+              RepaintBoundary(
+                key: key,
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: Container(
+                        color: Theme.of(context).scaffoldBackgroundColor,
+                      ),
+                    ),
+                    QrImage(
+                      data: generateQRData(booking),
+                      version: QrVersions.auto,
+                      size: 250.0,
+                    ),
+                  ],
+                ),
               ),
               SizedBox(height: 40),
               Container(
@@ -104,8 +130,8 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
   }
 
   Future<void> _onPressSecondaryBtn(BuildContext context, Booking b) async {
-    String uri =
-    Uri.encodeFull('sms:${b?.customerPhone}?body=${generateShareText(b)}');
+    String uri = Uri.encodeFull(
+        'sms:${b?.customerPhone}?body=${generateSMSShareText(b)}');
     if (await canLaunch(uri)) {
       await launch(uri);
     } else {
@@ -113,15 +139,69 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
     }
   }
 
-  Future<void> _onPressShareBtn(BuildContext context) async {
-    Share.share(generateShareText(booking), subject: 'Ticket Detail');
+  Future<void> _onPressShareBtn(BuildContext context, Booking b) async {
+    if (b == null) {
+      logger.e('Booking is null');
+      return simpleShare(b);
+    }
+
+    String path = await createQrPicture(generateQRData(b));
+
+    if (path == null) {
+      return simpleShare(b);
+    }
+
+    return Share.shareFiles(
+      [path],
+      subject: 'Ticket Detail',
+      text: generateGeneralShareText(b),
+    );
+  }
+
+  Future<void> simpleShare(Booking booking) {
+    return Share.share(
+      generateGeneralShareText(booking),
+      subject: 'Ticket Detail',
+    );
   }
 
   String generateQRData(Booking b) {
     return json.encode(b.toRealJson());
   }
 
-  String generateShareText(Booking booking) {
+  String generateGeneralShareText(Booking b) {
+    return 'Ticket ID:${b.ticketID}\nCustomer Name: ${b.customerName}\nSales Agent Name: ${b.agentName}\nDeparting Time BS: ${b.tripStartTime}\nDeparting Time MB: ${b.tripReturnTime}\nComment: ${b.comment}';
+  }
+
+  String generateSMSShareText(Booking b) {
     return 'Water Taxi Miami\n305-600-2511\nwww.watertaximiami.com\nFor Boarding make sure to be at least 5 minutes before boarding time at Water Taxi station\n305-600-2511\nDisclaimer...................\nWe are NOT responsible for any weather conditions, Personal belongings, Captain hold the right to change route and cancel trips, This is NOT a Sightseeing tour.';
+  }
+
+  Future<String> createQrPicture(String qr) async {
+    Directory tempDir = await getTemporaryDirectory();
+    String tempPath = tempDir.path;
+    final ts = DateTime.now().millisecondsSinceEpoch.toString();
+    String path = '$tempPath/$ts.png';
+
+    try {
+      RenderRepaintBoundary boundary = key.currentContext.findRenderObject();
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+      ByteData pngBytes = byteData.buffer.asByteData();
+
+      await writeToFile(pngBytes, path);
+
+      return path;
+    } catch (exception) {
+      logger.e(exception);
+      return null;
+    }
+  }
+
+  Future<void> writeToFile(ByteData data, String path) async {
+    final buffer = data.buffer;
+    await File(path).writeAsBytes(
+        buffer.asUint8List(data.offsetInBytes, data.lengthInBytes));
   }
 }
