@@ -1,5 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:share/share.dart';
+import 'package:water_taxi_miami/models/booking.dart';
+
+import '../global.dart';
 
 class ScannerBookingDetailScreen extends StatefulWidget {
   final String barcodeResult;
@@ -16,9 +21,30 @@ class ScannerBookingDetailScreen extends StatefulWidget {
 
 class _ScannerBookingDetailScreenState
     extends State<ScannerBookingDetailScreen> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
+    Booking booking;
+    try {
+      Map<String, dynamic> map = json.decode(widget.barcodeResult);
+      logger.d(map);
+
+      booking = Booking.fromRealJson(map);
+    } catch (e) {
+      logger.e('Exception converting QR code to Booking model.');
+      logger.e(e);
+
+      _scaffoldKey.currentState.showSnackBar(
+        SnackBar(
+          content: Text(
+              'Problem finding Booking detail in QR code. Make sure QR code is valid.'),
+        ),
+      );
+    }
+
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Text('Scan'),
         actions: [
@@ -38,7 +64,52 @@ class _ScannerBookingDetailScreenState
             style: Theme.of(context).textTheme.headline6,
           ),
           SizedBox(height: 40),
-          Text('${widget.barcodeResult}'),
+          Text('Agent Name: ${booking?.agentName ?? '-'}'),
+          SizedBox(height: 16),
+          Text(
+            'Customer Name: ${booking?.customerName ?? '-'}',
+            style: Theme.of(context).textTheme.bodyText1,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Customer Email: ${booking?.email ?? '-'}',
+            style: Theme.of(context).textTheme.bodyText1,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Customer Phone: ${booking?.customerPhone ?? '-'}',
+            style: Theme.of(context).textTheme.bodyText1,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Booking Date: ${booking?.bookingDate ?? '-'}',
+            style: Theme.of(context).textTheme.bodyText1,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Start Time: ${booking?.tripStartTime ?? '-'}',
+            style: Theme.of(context).textTheme.bodyText1,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Return Time: ${booking?.tripReturnTime ?? '-'}',
+            style: Theme.of(context).textTheme.bodyText1,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Adults: ${booking?.adult ?? '-'}',
+            style: Theme.of(context).textTheme.bodyText1,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Minors: ${booking?.minor ?? '-'}',
+            style: Theme.of(context).textTheme.bodyText1,
+          ),
+          SizedBox(height: 8),
+          Text(
+            'Comments: ${booking?.comment ?? '-'}',
+            style: Theme.of(context).textTheme.bodyText1,
+          ),
           SizedBox(height: 40),
           Container(
             width: MediaQuery.of(context).size.width,

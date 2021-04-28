@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share/share.dart';
@@ -103,7 +105,7 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
 
   Future<void> _onPressSecondaryBtn(BuildContext context, Booking b) async {
     String uri =
-        Uri.encodeFull('sms:${b?.customerPhone}?body=${generateShareText(b)}');
+    Uri.encodeFull('sms:${b?.customerPhone}?body=${generateShareText(b)}');
     if (await canLaunch(uri)) {
       await launch(uri);
     } else {
@@ -116,7 +118,7 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
   }
 
   String generateQRData(Booking b) {
-    return 'Ticket ID:${b.ticketID}\nCustomer Name: ${b.customerName}\nSales Agent Name: ${b.agentName}\nDeparting Time BS: ${b.tripStartTime}\nDeparting Time MB: ${b.tripReturnTime}\nComment: ${b.comment}';
+    return json.encode(b.toRealJson());
   }
 
   String generateShareText(Booking booking) {
