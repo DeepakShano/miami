@@ -126,8 +126,7 @@ class FirestoreDBService {
     Booking booking,
     TaxiStats updatedTimeStats,
   ) async {
-    String docId =
-        '${booking.taxiID}${DateFormat('ddMMMyyy').format(booking.bookingDateTimeStamp)}';
+    String docId = '${booking.taxiID}${booking.bookingDate}';
     return FirebaseFirestore.instance
         .collection('todayStat')
         .doc(docId)
@@ -293,21 +292,21 @@ class FirestoreDBService {
   }
 
   static Future<TaxiStats> getTaxiStats(String taxiId, DateTime date) {
-    String dateStr = DateFormat('dd-MMM-yyyy').format(date);
-    logger.d('dateStr: $dateStr');
+    String dateStr = DateFormat('ddMMMyyyy').format(date);
+    String docId = '$taxiId$dateStr';
+    logger.d('Document ID: $docId');
 
     return FirebaseFirestore.instance
         .collection('todayStat')
-        .where('taxiID', isEqualTo: taxiId)
-        .where('todayDate', isEqualTo: dateStr)
+        .doc(docId)
         .get()
-        .then((querySnapshot) {
-      if (querySnapshot.size == 0) {
+        .then((docSnapshot) {
+      if (!docSnapshot.exists) {
         logger.d('No stats found for taxi ID $taxiId and date $dateStr');
         return null;
       }
 
-      return TaxiStats.fromJson(querySnapshot.docs.first.data());
+      return TaxiStats.fromJson(docSnapshot.data());
     });
   }
 

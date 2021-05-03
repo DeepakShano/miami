@@ -555,37 +555,47 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     if (departureTimeFieldError != null) {
       return _scaffoldKey.currentState.showSnackBar(SnackBar(
         content: Text(departureTimeFieldError),
-        backgroundColor: Theme.of(context).errorColor,
+        backgroundColor: Theme
+            .of(context)
+            .errorColor,
       ));
     } else if (returnTimeFieldError != null) {
       return _scaffoldKey.currentState.showSnackBar(SnackBar(
         content: Text(returnTimeFieldError),
-        backgroundColor: Theme.of(context).errorColor,
+        backgroundColor: Theme
+            .of(context)
+            .errorColor,
       ));
     }
 
     Booking oldBooking = Booking.fromRealJson(widget.booking.toRealJson());
+    Booking newBooking = Booking.fromRealJson(widget.booking.toRealJson());
 
-    widget.booking.customerName = _nameController.text;
-    widget.booking.customerPhone = _phoneController.text;
-    widget.booking.email = _emailController.text;
-    widget.booking.tripStartTime = _dptTimeController.text;
-    widget.booking.tripReturnTime = _returnTimeController.text;
-    widget.booking.adult = _adultCountController.text;
-    widget.booking.minor = _minorCountController.text;
-    widget.booking.comment = _commentController.text;
+    newBooking.customerName = _nameController.text;
+    newBooking.customerPhone = _phoneController.text;
+    newBooking.email = _emailController.text;
+    newBooking.tripStartTime = _dptTimeController.text;
+    newBooking.tripReturnTime = _returnTimeController.text;
+    newBooking.adult = _adultCountController.text;
+    newBooking.minor = _minorCountController.text;
+    newBooking.comment = _commentController.text;
 
-    bool hasMinorAdultCountChanged = oldBooking.minor != widget.booking.minor ||
-        oldBooking.adult != widget.booking.adult;
+    bool hasMinorAdultCountChanged = oldBooking.minor != newBooking.minor ||
+        oldBooking.adult != newBooking.adult;
 
     TaxiStats taxiStat = await FirestoreDBService.getTaxiStats(
-      widget.booking.taxiID,
-      DateFormat('ddMMMyyy').parse(widget.booking.bookingDate),
+      newBooking.taxiID,
+      DateFormat('ddMMMyyy').parse(newBooking.bookingDate),
     );
 
     logger.d('taxiStat: ${taxiStat.toJson()}');
 
-    if (hasTripTimingChanged(oldBooking, widget.booking)) {
+    logger.d(
+        'hasTripTimingChanged(oldBooking, newBooking): ${hasTripTimingChanged(
+            oldBooking, newBooking)}');
+    logger.d('hasMinorAdultCountChanged: ${hasMinorAdultCountChanged}');
+
+    if (hasTripTimingChanged(oldBooking, newBooking)) {
       // TODO: Could improve code. Very unreadable. Very "complex".
       TimingStat oldStartTimingStat = [
         ...taxiStat.startTimingList,
@@ -601,22 +611,25 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
           int.parse(oldBooking.adult) + int.parse(oldBooking.minor);
 
       TimingStat newStartTimingStat = (oldBooking.startDeparting
-              ? taxiStat.startTimingList
-              : taxiStat.returnTimingList)
-          .firstWhere((e) => e.time == widget.booking.tripStartTime);
+          ? taxiStat.startTimingList
+          : taxiStat.returnTimingList)
+          .firstWhere((e) => e.time == newBooking.tripStartTime);
       TimingStat newReturnTimingStat = (oldBooking.startDeparting
-              ? taxiStat.returnTimingList
-              : taxiStat.startTimingList)
-          .firstWhere((e) => e.time == widget.booking.tripReturnTime);
+          ? taxiStat.returnTimingList
+          : taxiStat.startTimingList)
+          .firstWhere((e) => e.time == newBooking.tripReturnTime);
       newStartTimingStat.alreadyBooked +=
-          int.parse(widget.booking.adult) + int.parse(widget.booking.minor);
+          int.parse(newBooking.adult) + int.parse(newBooking.minor);
       newReturnTimingStat.alreadyBooked +=
-          int.parse(widget.booking.adult) + int.parse(widget.booking.minor);
+          int.parse(newBooking.adult) + int.parse(newBooking.minor);
     } else if (hasMinorAdultCountChanged) {
       int adultChange =
-          int.parse(widget.booking.adult) - int.parse(oldBooking.adult);
+          int.parse(newBooking.adult) - int.parse(oldBooking.adult);
       int minorChange =
-          int.parse(widget.booking.minor) - int.parse(oldBooking.minor);
+          int.parse(newBooking.minor) - int.parse(oldBooking.minor);
+
+      logger.d('adultChange: $adultChange');
+      logger.d('minorChange: $minorChange');
 
       TimingStat startTimingStat = (oldBooking.startDeparting
               ? taxiStat.startTimingList
@@ -628,13 +641,20 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
           .firstWhere((e) => e.time == oldBooking.tripReturnTime);
       startTimingStat.alreadyBooked += adultChange + minorChange;
       returnTimingStat.alreadyBooked += adultChange + minorChange;
+
+      logger.d(
+          'startTimingStat.alreadyBooked : ${startTimingStat.alreadyBooked}');
+      logger.d(
+          'returnTimingStat.alreadyBooked  : ${returnTimingStat.alreadyBooked}');
     }
 
     // Update bookings
     setState(() => isBtnLoading = true);
+    logger.d('Update booking: ${newBooking.toRealJson()}');
+    logger.d('Update taxi stats: ${taxiStat.toJson()}');
     String ticketId = await FirestoreDBService.updateBooking(
-      widget.booking.ticketID,
-      widget.booking,
+      newBooking.ticketID,
+      newBooking,
       taxiStat,
     );
     setState(() => isBtnLoading = false);
@@ -643,13 +663,8 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
   }
 
   bool hasTripTimingChanged(Booking oldBooking, Booking newBooking) {
-    if (newBooking.startDeparting) {
-      return oldBooking.tripReturnTime != newBooking.tripReturnTime ||
-          oldBooking.tripStartTime != newBooking.tripStartTime;
-    } else {
-      return oldBooking.tripStartTime != newBooking.tripReturnTime ||
-          oldBooking.tripReturnTime != newBooking.tripStartTime;
-    }
+    return oldBooking.tripReturnTime != newBooking.tripReturnTime ||
+        oldBooking.tripStartTime != newBooking.tripStartTime;
   }
 }
 
