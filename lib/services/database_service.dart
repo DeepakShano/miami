@@ -202,12 +202,16 @@ class FirestoreDBService {
   static Stream<List<Booking>> streamTickets(String agentId) {
     return FirebaseFirestore.instance
         .collection('manageBooking')
-        // .where('bookingDateTimeStamp', isGreaterThanOrEqualTo: DateTime.now())
         .where('bookingAgentID', isEqualTo: agentId)
-        .orderBy('bookingDateTimeStamp', descending: true)
+        .where('status', isNotEqualTo: 'Cancelled')
         .snapshots()
         .map((event) {
-      return event.docs.map((e) => Booking.fromJson(e.data()))?.toList();
+      List<Booking> bookings =
+          event.docs.map((e) => Booking.fromJson(e.data()))?.toList();
+      bookings?.sort((a, b) => DateFormat('ddMMMyyy')
+          .parse(b.bookingDate)
+          .compareTo(DateFormat('ddMMMyyy').parse(a.bookingDate)));
+      return bookings;
     });
   }
 
@@ -247,7 +251,7 @@ class FirestoreDBService {
       return FirebaseFirestore.instance
           .collection('manageBooking')
           .doc(booking.ticketID)
-          .delete();
+          .update({'status': 'Cancelled'});
     });
   }
 
