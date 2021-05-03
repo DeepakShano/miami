@@ -212,8 +212,7 @@ class FirestoreDBService {
   }
 
   static Future<void> deleteBooking(Booking booking) {
-    String statsDocId =
-        '${booking.taxiID}${DateFormat('ddMMMyyy').format(booking.bookingDateTimeStamp)}';
+    String statsDocId = '${booking.taxiID}${booking.bookingDate}';
 
     return FirebaseFirestore.instance
         .collection('todayStat')
@@ -227,9 +226,13 @@ class FirestoreDBService {
 
       TaxiStats taxiStat = TaxiStats.fromJson(snapshot.data());
 
-      TimingStat startTimingStat = taxiStat.startTimingList
+      TimingStat startTimingStat = (booking.startDeparting
+              ? taxiStat.startTimingList
+              : taxiStat.returnTimingList)
           .firstWhere((e) => e.time == booking.tripStartTime);
-      TimingStat returnTimingStat = taxiStat.returnTimingList
+      TimingStat returnTimingStat = (booking.startDeparting
+              ? taxiStat.returnTimingList
+              : taxiStat.startTimingList)
           .firstWhere((e) => e.time == booking.tripReturnTime);
 
       int adultMinorCount = int.parse(booking.adult) + int.parse(booking.minor);

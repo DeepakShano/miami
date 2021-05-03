@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:water_taxi_miami/models/booking.dart';
 import 'package:water_taxi_miami/models/taxi_detail.dart';
@@ -345,6 +346,38 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     );
   }
 
+  Future<String> validateDepartureTextField() async {
+    String time = _dptTimeController.text;
+
+    TaxiStats taxiStat = await FirestoreDBService.getTaxiStats(
+      widget.booking.taxiID,
+      DateFormat('ddMMMyyy').parse(widget.booking.bookingDate),
+    );
+
+    TimingStat matchingTimeStat = (widget.booking.startDeparting
+            ? taxiStat.startTimingList
+            : taxiStat.returnTimingList)
+        .firstWhere((i) => i.time == time, orElse: () => null);
+
+    return matchingTimeStat == null ? 'Select a valid departure time' : null;
+  }
+
+  Future<String> validateReturnTextField() async {
+    String time = _returnTimeController.text;
+
+    TaxiStats taxiStat = await FirestoreDBService.getTaxiStats(
+      widget.booking.taxiID,
+      DateFormat('ddMMMyyy').parse(widget.booking.bookingDate),
+    );
+
+    TimingStat matchingTimeStat = (widget.booking.startDeparting
+            ? taxiStat.returnTimingList
+            : taxiStat.startTimingList)
+        .firstWhere((i) => i.time == time, orElse: () => null);
+
+    return matchingTimeStat == null ? 'Select a valid return time' : null;
+  }
+
   void _openDepartureDialog() {
     List<TaxiDetail> taxis = context.read<TaxiProvider>().taxis;
     TaxiDetail taxi = taxis.firstWhere(
@@ -359,8 +392,15 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
 
     bool isWeekend =
         [6, 7].contains(widget.booking.bookingDateTimeStamp.weekday);
-    List<String> timingsList =
-        isWeekend ? taxi.weekEndStartTiming : taxi.weekDayStartTiming;
+
+    List<String> timingsList;
+    if (widget.booking.startDeparting) {
+      timingsList =
+          isWeekend ? taxi.weekEndStartTiming : taxi.weekDayStartTiming;
+    } else {
+      timingsList =
+          isWeekend ? taxi.weekEndReturnTiming : taxi.weekDayReturnTiming;
+    }
 
     AlertDialog alert = AlertDialog(
       title: Text("Select Departing Time BS"),
@@ -433,8 +473,14 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
 
     bool isWeekend =
         [6, 7].contains(widget.booking.bookingDateTimeStamp.weekday);
-    List<String> timingsList =
-        isWeekend ? taxi.weekEndReturnTiming : taxi.weekDayReturnTiming;
+    List<String> timingsList;
+    if (widget.booking.startDeparting) {
+      timingsList =
+          isWeekend ? taxi.weekEndReturnTiming : taxi.weekDayReturnTiming;
+    } else {
+      timingsList =
+          isWeekend ? taxi.weekEndStartTiming : taxi.weekDayStartTiming;
+    }
 
     AlertDialog alert = AlertDialog(
       title: Text("Select Departing Time MB"),
@@ -503,6 +549,21 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
       return;
     }
 
+    String departureTimeFieldError = await validateDepartureTextField();
+    String returnTimeFieldError = await validateReturnTextField();
+
+    if (departureTimeFieldError != null) {
+      return _scaffoldKey.currentState.showSnackBar(SnackBar(
+        content: Text(departureTimeFieldError),
+        backgroundColor: Theme.of(context).errorColor,
+      ));
+    } else if (returnTimeFieldError != null) {
+      return _scaffoldKey.currentState.showSnackBar(SnackBar(
+        content: Text(returnTimeFieldError),
+        backgroundColor: Theme.of(context).errorColor,
+      ));
+    }
+
     Booking oldBooking = Booking.fromRealJson(widget.booking.toRealJson());
 
     widget.booking.customerName = _nameController.text;
@@ -514,31 +575,38 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     widget.booking.minor = _minorCountController.text;
     widget.booking.comment = _commentController.text;
 
-    bool hasTripTimingChanged =
-        oldBooking.tripReturnTime != widget.booking.tripReturnTime ||
-            oldBooking.tripStartTime != widget.booking.tripReturnTime;
-
     bool hasMinorAdultCountChanged = oldBooking.minor != widget.booking.minor ||
         oldBooking.adult != widget.booking.adult;
 
     TaxiStats taxiStat = await FirestoreDBService.getTaxiStats(
       widget.booking.taxiID,
-      widget.booking.bookingDateTimeStamp,
+      DateFormat('ddMMMyyy').parse(widget.booking.bookingDate),
     );
 
-    if (hasTripTimingChanged) {
-      TimingStat oldStartTimingStat = taxiStat.startTimingList
-          .firstWhere((e) => e.time == oldBooking.tripStartTime);
-      TimingStat oldReturnTimingStat = taxiStat.returnTimingList
-          .firstWhere((e) => e.time == oldBooking.tripReturnTime);
+    logger.d('taxiStat: ${taxiStat.toJson()}');
+
+    if (hasTripTimingChanged(oldBooking, widget.booking)) {
+      // TODO: Could improve code. Very unreadable. Very "complex".
+      TimingStat oldStartTimingStat = [
+        ...taxiStat.startTimingList,
+        ...taxiStat.returnTimingList,
+      ].firstWhere((e) => e.time == oldBooking.tripStartTime);
+      TimingStat oldReturnTimingStat = [
+        ...taxiStat.returnTimingList,
+        ...taxiStat.startTimingList,
+      ].firstWhere((e) => e.time == oldBooking.tripReturnTime);
       oldStartTimingStat.alreadyBooked -=
           int.parse(oldBooking.adult) + int.parse(oldBooking.minor);
       oldReturnTimingStat.alreadyBooked -=
           int.parse(oldBooking.adult) + int.parse(oldBooking.minor);
 
-      TimingStat newStartTimingStat = taxiStat.startTimingList
+      TimingStat newStartTimingStat = (oldBooking.startDeparting
+              ? taxiStat.startTimingList
+              : taxiStat.returnTimingList)
           .firstWhere((e) => e.time == widget.booking.tripStartTime);
-      TimingStat newReturnTimingStat = taxiStat.returnTimingList
+      TimingStat newReturnTimingStat = (oldBooking.startDeparting
+              ? taxiStat.returnTimingList
+              : taxiStat.startTimingList)
           .firstWhere((e) => e.time == widget.booking.tripReturnTime);
       newStartTimingStat.alreadyBooked +=
           int.parse(widget.booking.adult) + int.parse(widget.booking.minor);
@@ -550,9 +618,13 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
       int minorChange =
           int.parse(widget.booking.minor) - int.parse(oldBooking.minor);
 
-      TimingStat startTimingStat = taxiStat.startTimingList
+      TimingStat startTimingStat = (oldBooking.startDeparting
+              ? taxiStat.startTimingList
+              : taxiStat.returnTimingList)
           .firstWhere((e) => e.time == oldBooking.tripStartTime);
-      TimingStat returnTimingStat = taxiStat.returnTimingList
+      TimingStat returnTimingStat = (oldBooking.startDeparting
+              ? taxiStat.returnTimingList
+              : taxiStat.startTimingList)
           .firstWhere((e) => e.time == oldBooking.tripReturnTime);
       startTimingStat.alreadyBooked += adultChange + minorChange;
       returnTimingStat.alreadyBooked += adultChange + minorChange;
@@ -568,6 +640,16 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     setState(() => isBtnLoading = false);
 
     Navigator.pop(context);
+  }
+
+  bool hasTripTimingChanged(Booking oldBooking, Booking newBooking) {
+    if (newBooking.startDeparting) {
+      return oldBooking.tripReturnTime != newBooking.tripReturnTime ||
+          oldBooking.tripStartTime != newBooking.tripStartTime;
+    } else {
+      return oldBooking.tripStartTime != newBooking.tripReturnTime ||
+          oldBooking.tripReturnTime != newBooking.tripStartTime;
+    }
   }
 }
 
