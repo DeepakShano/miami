@@ -43,6 +43,7 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text('Confirmation'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: Icon(Icons.share_outlined),
@@ -52,8 +53,8 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
           ),
         ],
       ),
-      body: FutureBuilder<Booking>(
-        future: f,
+      body: StreamBuilder<Booking>(
+        stream: FirestoreDBService.streamBooking(widget.ticketId),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return Center(
@@ -93,13 +94,52 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
                 ),
               ),
               SizedBox(height: 40),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  RaisedButton(
+                    color: Colors.green,
+                    child: Text(
+                        booking.status == Booking.BOOKING_STATUS_APPROVED
+                            ? 'Approved'
+                            : 'Approve'),
+                    onPressed: booking.status == Booking.BOOKING_STATUS_APPROVED
+                        ? null
+                        : () async {
+                            await FirestoreDBService.updateBookingStatus(
+                              booking.ticketID,
+                              Booking.BOOKING_STATUS_APPROVED,
+                            );
+                          },
+                    textColor: Colors.white,
+                  ),
+                  SizedBox(width: 20),
+                  RaisedButton(
+                    color: Colors.red,
+                    child: Text(
+                        booking.status == Booking.BOOKING_STATUS_REJECTED
+                            ? 'Rejected'
+                            : 'Reject'),
+                    onPressed: booking.status == Booking.BOOKING_STATUS_REJECTED
+                        ? null
+                        : () async {
+                            await FirestoreDBService.updateBookingStatus(
+                              booking.ticketID,
+                              Booking.BOOKING_STATUS_REJECTED,
+                            );
+                          },
+                    textColor: Colors.white,
+                  ),
+                ],
+              ),
+              SizedBox(height: 40),
               Container(
                 width: MediaQuery.of(context).size.width,
                 padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
                 child: RaisedButton(
                   child: Text('Message ticket to client'),
                   onPressed: () {
-                    _onPressSecondaryBtn(context, booking);
+                    _onPressShareBtn(context, booking);
                   },
                   textColor: Colors.white,
                 ),

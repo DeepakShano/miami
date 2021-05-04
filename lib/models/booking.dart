@@ -20,6 +20,11 @@ class Booking {
   bool isAdminTicketBook;
   String ticketDepartureSide;
 
+  static const BOOKING_STATUS_PENDING = 'Pending';
+  static const BOOKING_STATUS_REJECTED = 'Rejected';
+  static const BOOKING_STATUS_APPROVED = 'Approved';
+  static const BOOKING_STATUS_CANCELLED = 'Cancelled';
+
   Booking({
     this.taxiID,
     this.customerName,

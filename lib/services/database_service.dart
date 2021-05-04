@@ -155,6 +155,18 @@ class FirestoreDBService {
     });
   }
 
+  static Stream<Booking> streamBooking(String id) {
+    return FirebaseFirestore.instance
+        .collection('manageBooking')
+        .doc(id)
+        .snapshots()
+        .map((event) {
+      if (!event.exists) return null;
+
+      return Booking.fromJson(event.data());
+    });
+  }
+
   static Future<List<Booking>> getBookingForCrew(
     String taxiId,
     DateTime bookingDate,
@@ -202,7 +214,7 @@ class FirestoreDBService {
     return FirebaseFirestore.instance
         .collection('manageBooking')
         .where('bookingAgentID', isEqualTo: agentId)
-        .where('status', isNotEqualTo: 'Cancelled')
+        .where('status', isNotEqualTo: Booking.BOOKING_STATUS_CANCELLED)
         .snapshots()
         .map((event) {
       List<Booking> bookings =
@@ -212,6 +224,13 @@ class FirestoreDBService {
           .compareTo(DateFormat('ddMMMyyy').parse(a.bookingDate)));
       return bookings;
     });
+  }
+
+  static Future<void> updateBookingStatus(String bookingId, String status) {
+    return FirebaseFirestore.instance
+        .collection('manageBooking')
+        .doc(bookingId)
+        .update({'status': status});
   }
 
   static Future<void> deleteBooking(Booking booking) {
@@ -250,7 +269,7 @@ class FirestoreDBService {
       return FirebaseFirestore.instance
           .collection('manageBooking')
           .doc(booking.ticketID)
-          .update({'status': 'Cancelled'});
+          .update({'status': Booking.BOOKING_STATUS_CANCELLED});
     });
   }
 

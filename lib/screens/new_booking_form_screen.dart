@@ -394,7 +394,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       tripStartTime: _dptTimeController.text,
       adult: _adultCountController.text,
       minor: _minorCountController.text,
-      status: 'Pending',
+      status: Booking.BOOKING_STATUS_PENDING,
       agentName: context.read<AppUserProvider>().appUser?.name,
       bookingAgentID: context.read<AppUserProvider>().appUser?.userID,
       bookingDate: DateFormat('ddMMMyyy').format(bookingDateTime),
