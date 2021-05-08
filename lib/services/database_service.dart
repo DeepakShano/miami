@@ -233,6 +233,22 @@ class FirestoreDBService {
         .update({'status': status});
   }
 
+  static Future<void> updateStartDptBookingStatus(
+      String bookingId, String status) {
+    return FirebaseFirestore.instance
+        .collection('manageBooking')
+        .doc(bookingId)
+        .update({'startDepartureStatus': status});
+  }
+
+  static Future<void> updateReturnDptBookingStatus(
+      String bookingId, String status) {
+    return FirebaseFirestore.instance
+        .collection('manageBooking')
+        .doc(bookingId)
+        .update({'returnDepartureStatus': status});
+  }
+
   static Future<void> deleteBooking(Booking booking) {
     String statsDocId = '${booking.taxiID}${booking.bookingDate}';
 

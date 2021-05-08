@@ -19,6 +19,8 @@ class Booking {
   bool startDeparting;
   bool isAdminTicketBook;
   String ticketDepartureSide;
+  String returnDepartureStatus;
+  String startDepartureStatus;
 
   static const BOOKING_STATUS_PENDING = 'Pending';
   static const BOOKING_STATUS_REJECTED = 'Rejected';
@@ -46,6 +48,8 @@ class Booking {
     this.startDeparting,
     this.isAdminTicketBook,
     this.ticketDepartureSide,
+    this.returnDepartureStatus,
+    this.startDepartureStatus,
   });
 
   Booking.fromJson(Map<String, dynamic> json) {
@@ -71,6 +75,8 @@ class Booking {
     startDeparting = json['startDeparting'];
     isAdminTicketBook = json['isAdminTicketBook'];
     ticketDepartureSide = json['ticketDepartureSide'];
+    returnDepartureStatus = json['returnDepartureStatus'];
+    startDepartureStatus = json['startDepartureStatus'];
   }
 
   Booking.fromRealJson(Map<String, dynamic> json) {
@@ -96,6 +102,8 @@ class Booking {
     startDeparting = json['startDeparting'];
     isAdminTicketBook = json['isAdminTicketBook'];
     ticketDepartureSide = json['ticketDepartureSide'];
+    returnDepartureStatus = json['returnDepartureStatus'];
+    startDepartureStatus = json['startDepartureStatus'];
   }
 
   Map<String, dynamic> toJson() {
@@ -120,6 +128,8 @@ class Booking {
     data['startDeparting'] = this.startDeparting;
     data['isAdminTicketBook'] = this.isAdminTicketBook;
     data['ticketDepartureSide'] = this.ticketDepartureSide;
+    data['returnDepartureStatus'] = this.returnDepartureStatus;
+    data['startDepartureStatus'] = this.startDepartureStatus;
     return data;
   }
 
@@ -146,6 +156,8 @@ class Booking {
     data['startDeparting'] = this.startDeparting;
     data['isAdminTicketBook'] = this.isAdminTicketBook;
     data['ticketDepartureSide'] = this.ticketDepartureSide;
+    data['returnDepartureStatus'] = this.returnDepartureStatus;
+    data['startDepartureStatus'] = this.startDepartureStatus;
     return data;
   }
 }

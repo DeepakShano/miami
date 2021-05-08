@@ -58,126 +58,170 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
           ),
         ],
       ),
-      body: StreamBuilder<Booking>(
-        stream: FirestoreDBService.streamBooking(widget.ticketId),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          } else if (snapshot.hasError || !snapshot.hasData) {
-            return Center(
-              child: Text('There was some issue..'),
-            );
-          }
+      body: SingleChildScrollView(
+        child: StreamBuilder<Booking>(
+          stream: FirestoreDBService.streamBooking(widget.ticketId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (snapshot.hasError || !snapshot.hasData) {
+              return Center(
+                child: Text('There was some issue..'),
+              );
+            }
 
-          booking = snapshot.data;
+            booking = snapshot.data;
+
+            return Column(
+              children: [
+                SizedBox(height: 40),
+                Text(
+                  'Ticket Booked',
+                  style: Theme.of(context).textTheme.headline6,
+                ),
+                SizedBox(height: 40),
+                RepaintBoundary(
+                  key: key,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: Container(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                        ),
+                      ),
+                      QrImage(
+                        data: generateQRData(booking),
+                        version: QrVersions.auto,
+                        size: 250.0,
+                      ),
+                    ],
+                  ),
+                ),
+                _approveButtons(booking),
+                SizedBox(height: 40),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: RaisedButton(
+                    child: Text('Message ticket to client'),
+                    onPressed: () {
+                      _onPressShareBtn(context, booking);
+                    },
+                    textColor: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: OutlineButton(
+                    child: Text('Done'),
+                    onPressed: () {
+                      _onPressPrimaryBtn(context);
+                    },
+                  ),
+                ),
+                SizedBox(height: 20),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _approveButtons(Booking booking) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: FutureBuilder<bool>(
+        future: isUserCrew,
+        builder: (context, snapshot) {
+          if (!snapshot.hasData || snapshot.hasError || !snapshot.data) {
+            return Container();
+          }
 
           return Column(
             children: [
               SizedBox(height: 40),
-              Text(
-                'Ticket Booked',
-                style: Theme.of(context).textTheme.headline6,
-              ),
-              SizedBox(height: 40),
-              RepaintBoundary(
-                key: key,
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: Container(
-                        color: Theme.of(context).scaffoldBackgroundColor,
-                      ),
-                    ),
-                    QrImage(
-                      data: generateQRData(booking),
-                      version: QrVersions.auto,
-                      size: 250.0,
-                    ),
-                  ],
-                ),
-              ),
-              FutureBuilder<bool>(
-                  future: isUserCrew,
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData ||
-                        snapshot.hasError ||
-                        !snapshot.data) {
-                      return Container();
-                    }
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(booking.startDeparting
+                        ? 'BS Departure'
+                        : 'MB Departure'),
+                  ),
+                  SizedBox(width: 20),
+                  Expanded(
+                    child: RaisedButton(
+                      child: Text(booking.startDepartureStatus ==
+                              Booking.BOOKING_STATUS_APPROVED
+                          ? 'Approved'
+                          : 'Approve'),
+                      onPressed: booking.startDepartureStatus ==
+                              Booking.BOOKING_STATUS_APPROVED
+                          ? null
+                          : () async {
+                              await FirestoreDBService
+                                  .updateStartDptBookingStatus(
+                                booking.ticketID,
+                                Booking.BOOKING_STATUS_APPROVED,
+                              );
 
-                    return Column(
-                      children: [
-                        SizedBox(height: 40),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            RaisedButton(
-                              color: Colors.green,
-                              child: Text(booking.status ==
-                                      Booking.BOOKING_STATUS_APPROVED
-                                  ? 'Approved'
-                                  : 'Approve'),
-                              onPressed: booking.status ==
-                                      Booking.BOOKING_STATUS_APPROVED
-                                  ? null
-                                  : () async {
-                                      await FirestoreDBService
-                                          .updateBookingStatus(
-                                        booking.ticketID,
-                                        Booking.BOOKING_STATUS_APPROVED,
-                                      );
-                                    },
-                              textColor: Colors.white,
-                            ),
-                            SizedBox(width: 20),
-                            RaisedButton(
-                              color: Colors.red,
-                              child: Text(booking.status ==
-                                      Booking.BOOKING_STATUS_REJECTED
-                                  ? 'Rejected'
-                                  : 'Reject'),
-                              onPressed: booking.status ==
-                                      Booking.BOOKING_STATUS_REJECTED
-                                  ? null
-                                  : () async {
-                                      await FirestoreDBService
-                                          .updateBookingStatus(
-                                        booking.ticketID,
-                                        Booking.BOOKING_STATUS_REJECTED,
-                                      );
-                                    },
-                              textColor: Colors.white,
-                            ),
-                          ],
-                        ),
-                      ],
-                    );
-                  }),
-              SizedBox(height: 40),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: RaisedButton(
-                  child: Text('Message ticket to client'),
-                  onPressed: () {
-                    _onPressShareBtn(context, booking);
-                  },
-                  textColor: Colors.white,
-                ),
+                              // If other status is also approved then set overall status to APPROVED
+                              if (booking.returnDepartureStatus ==
+                                  Booking.BOOKING_STATUS_APPROVED) {
+                                await FirestoreDBService.updateBookingStatus(
+                                  booking.ticketID,
+                                  Booking.BOOKING_STATUS_APPROVED,
+                                );
+                              }
+                            },
+                      textColor: Colors.white,
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 20),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: OutlineButton(
-                  child: Text('Done'),
-                  onPressed: () {
-                    _onPressPrimaryBtn(context);
-                  },
-                ),
-              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(booking.startDeparting
+                        ? 'MB Departure'
+                        : 'BS Departure'),
+                  ),
+                  SizedBox(width: 20),
+                  Expanded(
+                    child: RaisedButton(
+                      child: Text(booking.returnDepartureStatus ==
+                              Booking.BOOKING_STATUS_APPROVED
+                          ? 'Approved'
+                          : 'Approve'),
+                      onPressed: booking.returnDepartureStatus ==
+                              Booking.BOOKING_STATUS_APPROVED
+                          ? null
+                          : () async {
+                              await FirestoreDBService
+                                  .updateReturnDptBookingStatus(
+                                booking.ticketID,
+                                Booking.BOOKING_STATUS_APPROVED,
+                              );
+
+                              // If other status is also approved then set overall status to APPROVED
+                              if (booking.startDepartureStatus ==
+                                  Booking.BOOKING_STATUS_APPROVED) {
+                                await FirestoreDBService.updateBookingStatus(
+                                  booking.ticketID,
+                                  Booking.BOOKING_STATUS_APPROVED,
+                                );
+                              }
+                            },
+                      textColor: Colors.white,
+                    ),
+                  ),
+                ],
+              )
             ],
           );
         },
