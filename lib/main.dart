@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:logger/logger.dart';
-import 'package:overlay_support/overlay_support.dart';
 import 'package:provider/provider.dart';
 import 'package:water_taxi_miami/providers/app_user_provider.dart';
 import 'package:water_taxi_miami/providers/taxi_provider.dart';
@@ -19,27 +18,25 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OverlaySupport(
-      child: MultiProvider(
-        providers: [
-          ChangeNotifierProvider<AppUserProvider>(
-            builder: (context, child) => child,
-            create: (_) => AppUserProvider(),
-          ),
-          ChangeNotifierProvider<TaxiProvider>(
-            builder: (context, child) => child,
-            create: (_) => TaxiProvider(),
-          ),
-        ],
-        builder: (context, _) {
-          return MaterialApp(
-            title: 'Water Taxi Miami',
-            debugShowCheckedModeBanner: false,
-            theme: ThemeUtils.defaultAppThemeData,
-            home: LogInScreen(),
-          );
-        },
-      ),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AppUserProvider>(
+          builder: (context, child) => child,
+          create: (_) => AppUserProvider(),
+        ),
+        ChangeNotifierProvider<TaxiProvider>(
+          builder: (context, child) => child,
+          create: (_) => TaxiProvider(),
+        ),
+      ],
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'Water Taxi Miami',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeUtils.defaultAppThemeData,
+          home: LogInScreen(),
+        );
+      },
     );
   }
 }

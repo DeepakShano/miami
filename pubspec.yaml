@@ -3,7 +3,7 @@ description: Water Taxi Miami
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.17+27
+version: 1.0.18+28
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -13,7 +13,6 @@ dependencies:
     sdk: flutter
 
   cupertino_icons: ^1.0.0
-  overlay_support: ^1.0.5
   cloud_firestore: ^0.14.3
   firebase_core: ^0.5.2
   uuid: ^2.2.2

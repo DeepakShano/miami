@@ -555,16 +555,12 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     if (departureTimeFieldError != null) {
       return _scaffoldKey.currentState.showSnackBar(SnackBar(
         content: Text(departureTimeFieldError),
-        backgroundColor: Theme
-            .of(context)
-            .errorColor,
+        backgroundColor: Theme.of(context).errorColor,
       ));
     } else if (returnTimeFieldError != null) {
       return _scaffoldKey.currentState.showSnackBar(SnackBar(
         content: Text(returnTimeFieldError),
-        backgroundColor: Theme
-            .of(context)
-            .errorColor,
+        backgroundColor: Theme.of(context).errorColor,
       ));
     }
 
@@ -591,32 +587,31 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     logger.d('taxiStat: ${taxiStat.toJson()}');
 
     logger.d(
-        'hasTripTimingChanged(oldBooking, newBooking): ${hasTripTimingChanged(
-            oldBooking, newBooking)}');
+        'hasTripTimingChanged(oldBooking, newBooking): ${hasTripTimingChanged(oldBooking, newBooking)}');
     logger.d('hasMinorAdultCountChanged: ${hasMinorAdultCountChanged}');
 
     if (hasTripTimingChanged(oldBooking, newBooking)) {
       // TODO: Could improve code. Very unreadable. Very "complex".
-      TimingStat oldStartTimingStat = [
-        ...taxiStat.startTimingList,
-        ...taxiStat.returnTimingList,
-      ].firstWhere((e) => e.time == oldBooking.tripStartTime);
-      TimingStat oldReturnTimingStat = [
-        ...taxiStat.returnTimingList,
-        ...taxiStat.startTimingList,
-      ].firstWhere((e) => e.time == oldBooking.tripReturnTime);
+      TimingStat oldStartTimingStat = (oldBooking.startDeparting
+              ? taxiStat.startTimingList
+              : taxiStat.returnTimingList)
+          .firstWhere((e) => e.time == oldBooking.tripStartTime);
+      TimingStat oldReturnTimingStat = (oldBooking.startDeparting
+              ? taxiStat.returnTimingList
+              : taxiStat.startTimingList)
+          .firstWhere((e) => e.time == oldBooking.tripReturnTime);
       oldStartTimingStat.alreadyBooked -=
           int.parse(oldBooking.adult) + int.parse(oldBooking.minor);
       oldReturnTimingStat.alreadyBooked -=
           int.parse(oldBooking.adult) + int.parse(oldBooking.minor);
 
       TimingStat newStartTimingStat = (oldBooking.startDeparting
-          ? taxiStat.startTimingList
-          : taxiStat.returnTimingList)
+              ? taxiStat.startTimingList
+              : taxiStat.returnTimingList)
           .firstWhere((e) => e.time == newBooking.tripStartTime);
       TimingStat newReturnTimingStat = (oldBooking.startDeparting
-          ? taxiStat.returnTimingList
-          : taxiStat.startTimingList)
+              ? taxiStat.returnTimingList
+              : taxiStat.startTimingList)
           .firstWhere((e) => e.time == newBooking.tripReturnTime);
       newStartTimingStat.alreadyBooked +=
           int.parse(newBooking.adult) + int.parse(newBooking.minor);
