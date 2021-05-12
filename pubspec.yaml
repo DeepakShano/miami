@@ -3,7 +3,7 @@ description: Water Taxi Miami
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.18+28
+version: 1.0.19+29
 
 environment:
   sdk: ">=2.7.0 <3.0.0"

@@ -9,7 +9,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share/share.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:water_taxi_miami/global.dart';
 import 'package:water_taxi_miami/models/booking.dart';
 import 'package:water_taxi_miami/providers/app_user_provider.dart';
@@ -236,16 +235,6 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
     );
   }
 
-  Future<void> _onPressSecondaryBtn(BuildContext context, Booking b) async {
-    String uri = Uri.encodeFull(
-        'sms:${b?.customerPhone}?body=${generateSMSShareText(b)}');
-    if (await canLaunch(uri)) {
-      await launch(uri);
-    } else {
-      logger.e('Could not launch $uri');
-    }
-  }
-
   Future<void> _onPressShareBtn(BuildContext context, Booking b) async {
     if (b == null) {
       logger.e('Booking is null');
@@ -280,9 +269,6 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
     return 'Ticket ID:${b.ticketID}\nCustomer Name: ${b.customerName}\nSales Agent Name: ${b.agentName}\nDeparting Time BS: ${b.tripStartTime}\nDeparting Time MB: ${b.tripReturnTime}\nComment: ${b.comment}';
   }
 
-  String generateSMSShareText(Booking b) {
-    return 'Water Taxi Miami\n305-600-2511\nwww.watertaximiami.com\nFor Boarding make sure to be at least 5 minutes before boarding time at Water Taxi station\n305-600-2511\nDisclaimer...................\nWe are NOT responsible for any weather conditions, Personal belongings, Captain hold the right to change route and cancel trips, This is NOT a Sightseeing tour.';
-  }
 
   Future<String> createQrPicture(String qr) async {
     Directory tempDir = await getTemporaryDirectory();
