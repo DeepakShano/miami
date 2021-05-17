@@ -414,9 +414,11 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
           DateTime now = DateTime.now();
           DateTime nextDateStart = DateTime(now.year, now.month, now.day);
 
+          DateTime dateTimeOfBooking =
+              DateFormat('ddMMMyyy').parse(widget.booking.bookingDate);
+
           // If booking is of today. Hide/Untappable timings that are in past.
-          if (widget.booking.bookingDateTimeStamp.difference(nextDateStart) <
-              Duration(days: 1))
+          if (dateTimeOfBooking.difference(nextDateStart) < Duration(days: 1))
             try {
               int h = int.parse(timingStr.split(':').first);
               int m = int.parse(timingStr.split(':')[1].substring(0, 2));
@@ -494,9 +496,11 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
           DateTime now = DateTime.now();
           DateTime nextDateStart = DateTime(now.year, now.month, now.day);
 
+          DateTime dateTimeOfBooking =
+              DateFormat('ddMMMyyy').parse(widget.booking.bookingDate);
+
           // If booking is of today. Hide/Untappable timings that are in past.
-          if (widget.booking.bookingDateTimeStamp.difference(nextDateStart) <
-              Duration(days: 1))
+          if (dateTimeOfBooking.difference(nextDateStart) < Duration(days: 1))
             try {
               int h = int.parse(timingStr.split(':').first);
               int m = int.parse(timingStr.split(':')[1].substring(0, 2));
