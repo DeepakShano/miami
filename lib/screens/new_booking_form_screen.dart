@@ -411,7 +411,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       ticketDepartureSide: 'Bayside Beach',
       returnDepartureStatus: Booking.BOOKING_STATUS_PENDING,
       startDepartureStatus: Booking.BOOKING_STATUS_PENDING,
-      version: packageInfo.version,
+      buildVersion: packageInfo.version,
     );
 
     // Create new bookings
