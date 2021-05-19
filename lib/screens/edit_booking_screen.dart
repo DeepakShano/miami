@@ -644,7 +644,22 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
       logger.d(
           'startTimingStat.alreadyBooked : ${startTimingStat.alreadyBooked}');
       logger.d(
-          'returnTimingStat.alreadyBooked  : ${returnTimingStat.alreadyBooked}');
+          'returnTimingStat.alreadyBooked  : ${returnTimingStat
+              .alreadyBooked}');
+    }
+
+    if (taxiStat.startTimingList
+        .any((i) => i.alreadyBooked > taxiStat.totalSeats) ||
+        taxiStat.returnTimingList
+            .any((i) => i.alreadyBooked > taxiStat.totalSeats)) {
+      return _scaffoldKey.currentState.showSnackBar(
+        SnackBar(
+          content: Text('Cannot book more seats than available.'),
+          backgroundColor: Theme
+              .of(context)
+              .errorColor,
+        ),
+      );
     }
 
     // Update bookings
