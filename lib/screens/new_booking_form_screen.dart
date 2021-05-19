@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:package_info/package_info.dart';
 import 'package:provider/provider.dart';
 import 'package:water_taxi_miami/models/booking.dart';
 import 'package:water_taxi_miami/models/taxi_stats.dart';
@@ -385,6 +386,8 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
     DateTime bookingDateTime = context.read<TaxiProvider>().date;
     String ticketId = _generateTicketId(_nameController.text);
 
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+
     Booking booking = Booking(
       ticketID: ticketId,
       customerName: _nameController.text,
@@ -408,6 +411,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       ticketDepartureSide: 'Bayside Beach',
       returnDepartureStatus: Booking.BOOKING_STATUS_PENDING,
       startDepartureStatus: Booking.BOOKING_STATUS_PENDING,
+      version: packageInfo.version,
     );
 
     // Create new bookings

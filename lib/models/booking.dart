@@ -21,6 +21,7 @@ class Booking {
   String ticketDepartureSide;
   String returnDepartureStatus;
   String startDepartureStatus;
+  String version;
 
   static const BOOKING_STATUS_PENDING = 'Pending';
   static const BOOKING_STATUS_REJECTED = 'Rejected';
@@ -50,6 +51,7 @@ class Booking {
     this.ticketDepartureSide,
     this.returnDepartureStatus,
     this.startDepartureStatus,
+    this.version,
   });
 
   Booking.fromJson(Map<String, dynamic> json) {
@@ -77,6 +79,7 @@ class Booking {
     ticketDepartureSide = json['ticketDepartureSide'];
     returnDepartureStatus = json['returnDepartureStatus'];
     startDepartureStatus = json['startDepartureStatus'];
+    version = json['version'];
   }
 
   Booking.fromRealJson(Map<String, dynamic> json) {
@@ -104,6 +107,7 @@ class Booking {
     ticketDepartureSide = json['ticketDepartureSide'];
     returnDepartureStatus = json['returnDepartureStatus'];
     startDepartureStatus = json['startDepartureStatus'];
+    version = json['version'];
   }
 
   Map<String, dynamic> toJson() {
@@ -130,6 +134,7 @@ class Booking {
     data['ticketDepartureSide'] = this.ticketDepartureSide;
     data['returnDepartureStatus'] = this.returnDepartureStatus;
     data['startDepartureStatus'] = this.startDepartureStatus;
+    data['version'] = this.version;
     return data;
   }
 
@@ -158,6 +163,8 @@ class Booking {
     data['ticketDepartureSide'] = this.ticketDepartureSide;
     data['returnDepartureStatus'] = this.returnDepartureStatus;
     data['startDepartureStatus'] = this.startDepartureStatus;
+    data['version'] = this.version;
+
     return data;
   }
 }
