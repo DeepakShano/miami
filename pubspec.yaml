@@ -3,7 +3,7 @@ description: Water Taxi Miami
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.21+31
+version: 1.0.22+32
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -28,6 +28,7 @@ dependencies:
   flutter_barcode_scanner: ^1.0.2
   path_provider: ^1.6.28
   package_info: ^0.4.3+4
+  flutter_email_sender: ^4.0.0
 
 dev_dependencies:
   flutter_test:

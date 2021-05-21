@@ -5,6 +5,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_email_sender/flutter_email_sender.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -107,6 +108,18 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
                     child: Text('Message ticket to client'),
                     onPressed: () {
                       _onPressShareBtn(context, booking);
+                    },
+                    textColor: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 20),
+                Container(
+                  width: MediaQuery.of(context).size.width,
+                  padding: EdgeInsets.fromLTRB(16, 0, 16, 0),
+                  child: RaisedButton(
+                    child: Text('E-mail ticket to client'),
+                    onPressed: () {
+                      _onPressSendEmailBtn(context, booking);
                     },
                     textColor: Colors.white,
                   ),
@@ -254,6 +267,29 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
     );
   }
 
+  Future<void> _onPressSendEmailBtn(BuildContext context, Booking b) async {
+    if (b == null) {
+      logger.e('Booking is null');
+      return simpleShare(b);
+    }
+
+    String path = await createQrPicture(generateQRData(b));
+
+    if (path == null) {
+      return simpleShare(b);
+    }
+
+    final Email email = Email(
+      body: generateGeneralShareText(b),
+      subject: 'Ticket Detail',
+      recipients: b.email != null && b.email.isNotEmpty ? [b.email] : [],
+      attachmentPaths: [path],
+      isHTML: false,
+    );
+
+    return FlutterEmailSender.send(email);
+  }
+
   Future<void> simpleShare(Booking booking) {
     return Share.share(
       generateGeneralShareText(booking),
@@ -266,9 +302,8 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
   }
 
   String generateGeneralShareText(Booking b) {
-    return 'Ticket ID:${b.ticketID}\nCustomer Name: ${b.customerName}\nSales Agent Name: ${b.agentName}\nDeparting Time BS: ${b.tripStartTime}\nDeparting Time MB: ${b.tripReturnTime}\nComment: ${b.comment}';
+    return 'Ticket ID:${b.ticketID}\nCustomer Name: ${b.customerName}\nEmail: ${b.email}\nPhone: ${b.customerPhone}\nSales Agent Name: ${b.agentName}\nDeparting Time BS: ${b.tripStartTime}\nDeparting Time MB: ${b.tripReturnTime}\nComment: ${b.comment}';
   }
-
 
   Future<String> createQrPicture(String qr) async {
     Directory tempDir = await getTemporaryDirectory();

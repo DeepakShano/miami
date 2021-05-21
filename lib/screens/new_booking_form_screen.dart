@@ -61,7 +61,7 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
     if (DEBUG) {
       _nameController.text = 'Test';
       _phoneController.text = '9895952623';
-      _emailController.text = 'a@a.a';
+      _emailController.text = 'a@a.com';
       _minorCountController.text = '1';
       _adultCountController.text = '1';
       _commentController.text = 'test test test';

@@ -25,7 +25,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (DEBUG) {
       _firstNameController.text = 'Test Example';
       _phoneController.text = '9895952623';
-      _emailController.text = 'a@a.a';
+      _emailController.text = 'a@a.com';
       _pinController.text = '9999';
     }
   }
