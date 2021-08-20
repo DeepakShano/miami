@@ -68,7 +68,8 @@ class CrewBookingListScreen extends StatelessWidget {
                     itemCount: bookings.length,
                     itemBuilder: (context, index) {
                       Booking booking = bookings.elementAt(index);
-
+                      String dptdocId ='${booking.taxiID}${
+                          booking.tripStartTime}${booking.tripStartTime}';
                       return BookingListItem(
                         booking: bookings.elementAt(index),
                         onEditTap: null,
@@ -77,7 +78,7 @@ class CrewBookingListScreen extends StatelessWidget {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => TicketBookedScreen(
+                              builder: (context) => TicketBookedScreen(dptdocId: dptdocId,
                                   ticketId: booking.ticketID),
                             ),
                           );

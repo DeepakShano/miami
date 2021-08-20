@@ -6,6 +6,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_email_sender/flutter_email_sender.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -17,10 +18,11 @@ import 'package:water_taxi_miami/screens/log_in_screen.dart';
 import 'package:water_taxi_miami/services/database_service.dart';
 
 class TicketBookedScreen extends StatefulWidget {
+  final String dptdocId;
   final String ticketId;
-
   TicketBookedScreen({
     Key key,
+    @required this.dptdocId,
     @required this.ticketId,
   }) : super(key: key);
 
@@ -38,7 +40,10 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
   void initState() {
     super.initState();
     key = GlobalKey();
-    f = FirestoreDBService.getBooking(widget.ticketId);
+  //  f = FirestoreDBService.getBooking(widget.dptdocId,widget.ticketId);
+   // print(f);
+
+
     isUserCrew = FirestoreDBService.isPinReservedForCrew(
         context.read<AppUserProvider>().appUser?.userPin);
   }
@@ -60,16 +65,21 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
       ),
       body: SingleChildScrollView(
         child: StreamBuilder<Booking>(
-          stream: FirestoreDBService.streamBooking(widget.ticketId),
+          stream: FirestoreDBService.streamBooking(widget.dptdocId,widget.ticketId),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(
                 child: CircularProgressIndicator(),
               );
-            } else if (snapshot.hasError || !snapshot.hasData) {
-              return Center(
-                child: Text('There was some issue..'),
-              );
+            } else if (snapshot.hasError) {
+              if(snapshot.hasData){
+                return Container();
+              }else {
+                return Center(
+                  child: Text(
+                      'Something went wrong Please try again after some time'),
+                );
+              }
             }
 
             booking = snapshot.data;
@@ -92,14 +102,14 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
                         ),
                       ),
                       QrImage(
-                        data: generateQRData(booking),
+                        data: generateQRData(booking,widget.dptdocId,widget.ticketId),
                         version: QrVersions.auto,
                         size: 250.0,
                       ),
                     ],
                   ),
                 ),
-                _approveButtons(booking),
+                //_approveButtons(booking),
                 SizedBox(height: 40),
                 Container(
                   width: MediaQuery.of(context).size.width,
@@ -254,7 +264,7 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
       return simpleShare(b);
     }
 
-    String path = await createQrPicture(generateQRData(b));
+    String path = await createQrPicture(generateQRData(b,widget.dptdocId,widget.ticketId));
 
     if (path == null) {
       return simpleShare(b);
@@ -273,7 +283,7 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
       return simpleShare(b);
     }
 
-    String path = await createQrPicture(generateQRData(b));
+    String path = await createQrPicture(generateQRData(b,widget.dptdocId,widget.ticketId));
 
     if (path == null) {
       return simpleShare(b);
@@ -297,7 +307,7 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
     );
   }
 
-  String generateQRData(Booking b) {
+  String generateQRData(Booking b, String dptdocId, String ticketId) {
     return json.encode(b.toRealJson());
   }
 

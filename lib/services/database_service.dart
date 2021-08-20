@@ -1,4 +1,8 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'package:water_taxi_miami/global.dart';
@@ -140,30 +144,30 @@ class FirestoreDBService {
     });
   }
 
-  static Future<Booking> getBooking(String id) {
+  static Future<Booking> getBooking(String dptdocId, String ticketId) {
     return FirebaseFirestore.instance
-        .collection('manageBooking')
-        .doc(id)
+        .collection('bookings')
+        .doc(dptdocId)
         .get()
-        .then((value) {
-      if (!value.exists) {
-        logger.d('No booking found with ID $id');
-        return null;
+        .asStream()
+        .forEach((element) {
+      if (element.id == ticketId) {
+        print(element.id);
+        print(ticketId);
+        return Booking.fromJson(element.data());
       }
-
-      return Booking.fromJson(value.data());
     });
   }
 
-  static Stream<Booking> streamBooking(String id) {
+  static Stream<Booking> streamBooking(String docid, String ticketId)  {
     return FirebaseFirestore.instance
-        .collection('manageBooking')
-        .doc(id)
+        .collection('bookings')
+        .doc(docid)
         .snapshots()
         .map((event) {
       if (!event.exists) return null;
 
-      return Booking.fromJson(event.data());
+      return Booking.fromJson(event.data()[ticketId]);
     });
   }
 
@@ -210,20 +214,81 @@ class FirestoreDBService {
     return <Booking>[...startTimeBookings, ...returnTimeBookings];
   }
 
-  static Stream<List<Booking>> streamTickets(String agentId) {
+  static Future<int> getAvailableSeatCount(
+      DateTime selectedDate, String ticketTime, String timeType) {
+    String dateStr = DateFormat('ddMMMyyyy').format(selectedDate);
+    var count = 0;
+    print("$ticketTime");
+    print("$timeType");
     return FirebaseFirestore.instance
-        .collection('manageBooking')
-        .where('bookingAgentID', isEqualTo: agentId)
-        .where('status', isNotEqualTo: Booking.BOOKING_STATUS_CANCELLED)
-        .snapshots()
-        .map((event) {
-      List<Booking> bookings =
-          event.docs.map((e) => Booking.fromJson(e.data()))?.toList();
-      bookings?.sort((a, b) => DateFormat('ddMMMyyy')
-          .parse(b.bookingDate)
-          .compareTo(DateFormat('ddMMMyyy').parse(a.bookingDate)));
+        .collection("manageBooking")
+        .where('bookingDate', isEqualTo: dateStr)
+        .where(timeType, isEqualTo: ticketTime)
+        .get()
+        .then((QuerySnapshot querySnapshot) {
+      if (querySnapshot.size == 0) {
+        logger.d('No seat available $dateStr');
+        return count;
+      }
+      querySnapshot.docs.forEach((element) {
+        var data = element.data();
+
+        if (data['status'].toString() == "Cancelled") {
+          logger.d('Cancelled $dateStr');
+          return count;
+        } else {
+          count = count +
+              int.parse(data["adult"].toString()) +
+              int.parse(data["minor"].toString());
+          print("$count");
+          return count;
+        }
+      });
+      return count;
+    });
+  }
+
+  static Future<int> reamingSeatCount(DocumentReference postRef,
+      Transaction transaction, DateTime selectedDate) async {
+    var count = 0;
+    return transaction.get(postRef).asStream().forEach((element) {
+      element.data()?.values?.forEach((element) {
+        if (element['status'] != "Cancelled") {
+          count =
+              count + int.parse(element["adult"]) + int.parse(element["minor"]);
+        }
+      });
+      return (34 - count);
+    });
+  }
+
+  static Future<List<Booking>> streamTickets(String agentId) async {
+    List<Booking> bookings = new List<Booking>();
+    List<String> bookingid=new List<String>();
+
+    await FirebaseFirestore.instance
+        .collection("bookings")
+        .get()
+        .asStream()
+        .forEach((element) {
+      for (var i = 0; i < element.size; i++) {
+        element.docs[i].data().forEach((key, value) {
+
+          if(!(bookingid.contains(key))){
+            bookingid.add(key);
+            bookings.add(Booking.fromJson(value));
+          }
+        });
+      }
+
+      bookings
+          .where((element) =>
+              element.bookingAgentID == agentId &&
+              element.status != Booking.BOOKING_STATUS_CANCELLED)
+          .toSet().toList();
       return bookings;
     });
+    return bookings;
   }
 
   static Future<void> updateBookingStatus(String bookingId, String status) {
@@ -249,45 +314,27 @@ class FirestoreDBService {
         .update({'returnDepartureStatus': status});
   }
 
-  static Future<void> deleteBooking(Booking booking) {
-    String statsDocId = '${booking.taxiID}${booking.bookingDate}';
+  static Future<void> deleteBooking(Booking booking, String condition) {
 
-    return FirebaseFirestore.instance
-        .collection('todayStat')
-        .doc(statsDocId)
-        .get()
-        .then((snapshot) {
-      if (!snapshot.exists) {
-        logger.w('Today Stat document does not exist');
-        return Future.error('Today stat document does not exist');
-      }
+    String statsDocId;
+    if(condition=='both'){
 
-      TaxiStats taxiStat = TaxiStats.fromJson(snapshot.data());
+      _deleteFunction('${booking.taxiID}${booking.bookingDate}${booking.tripStartTime}',booking);
+      _deleteFunction('${booking.taxiID}${booking.bookingDate}${booking.tripReturnTime}',booking);
 
-      TimingStat startTimingStat = (booking.startDeparting
-              ? taxiStat.startTimingList
-              : taxiStat.returnTimingList)
-          .firstWhere((e) => e.time == booking.tripStartTime);
-      TimingStat returnTimingStat = (booking.startDeparting
-              ? taxiStat.returnTimingList
-              : taxiStat.startTimingList)
-          .firstWhere((e) => e.time == booking.tripReturnTime);
 
-      int adultMinorCount = int.parse(booking.adult) + int.parse(booking.minor);
-      startTimingStat.alreadyBooked -= adultMinorCount;
-      returnTimingStat.alreadyBooked -= adultMinorCount;
+    }else if(condition=='departure'){
+       statsDocId =
+          '${booking.taxiID}${booking.bookingDate}${booking.tripStartTime}';
+    }else if(condition=='return'){
+       statsDocId =
+          '${booking.taxiID}${booking.bookingDate}${booking.tripReturnTime}';
+    }
+    _deleteFunction(statsDocId,booking);
 
-      return FirebaseFirestore.instance
-          .collection('todayStat')
-          .doc(statsDocId)
-          .update(taxiStat.toJson());
-    }).then((value) {
-      return FirebaseFirestore.instance
-          .collection('manageBooking')
-          .doc(booking.ticketID)
-          .update({'status': Booking.BOOKING_STATUS_CANCELLED});
-    });
   }
+
+
 
   static Future<AdminMessage> getAdminMessage(DateTime date) {
     String dateStr = DateFormat('dd/MM/yyyy').format(date);
@@ -323,6 +370,21 @@ class FirestoreDBService {
       }
 
       return TaxiStats.fromJson(querySnapshot.docs.first.data());
+    });
+  }
+
+  static Future<TaxiDetail> getTaxidetails(String taxiId) {
+    return FirebaseFirestore.instance
+        .collection('TaxiDetail')
+        .doc(taxiId)
+        .get()
+        .then((docSnapshot) {
+      if (!docSnapshot.exists) {
+        logger.d('No stats found for taxi ID $taxiId');
+        return null;
+      }
+
+      return TaxiDetail.fromJson(docSnapshot.data());
     });
   }
 
@@ -379,4 +441,29 @@ class FirestoreDBService {
         .set(taxiStats.toJson())
         .then((value) => taxiStats);
   }
+
+  static _deleteFunction(String statsDocId, Booking booking) {
+
+    return FirebaseFirestore.instance
+        .collection('bookings')
+        .doc(statsDocId)
+        .get()
+        .then((snapshot) {
+      if (!snapshot.exists) {
+        logger.w('Today Stat document does not exist');
+        return Future.error('Today stat document does not exist');
+      }
+
+      print(booking.status);
+      print(booking.ticketID);
+      booking.status = Booking.BOOKING_STATUS_CANCELLED;
+      print(booking.status);
+      return FirebaseFirestore.instance
+          .collection("bookings")
+          .doc(statsDocId)
+          .update({booking.ticketID: booking.toJson()});
+    });
+  }
+
+
 }

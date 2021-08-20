@@ -97,7 +97,7 @@ class _CrewDashboardScreenState extends State<CrewDashboardScreen> {
                   child: TaxiExpansionPanelList(
                     taxiDetails: taxiDetails,
                     showDepartureTime: radioGroupValue == 0,
-                    onTap: (TaxiDetail taxi, String time) {
+                    onTap: (TaxiDetail taxi, String time,index) {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => CrewBookingListScreen(

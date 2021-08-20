@@ -8,10 +8,22 @@ import 'package:water_taxi_miami/providers/taxi_provider.dart';
 import 'package:water_taxi_miami/screens/message_screen.dart';
 import 'package:water_taxi_miami/screens/return_time_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+import 'new_booking_form_screen.dart';
+
+class DashboardScreen extends StatefulWidget {
+  @override
+  _DashboardScreenState createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  var _scaffoldKey = GlobalKey<ScaffoldState>();
+
   @override
   Widget build(BuildContext context) {
+    bool isWeekend =
+        [6, 7].contains(context.watch<TaxiProvider>().date.weekday);
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         centerTitle: true,
         title: Text('Dashboard'),
@@ -31,7 +43,15 @@ class DashboardScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            SizedBox(height: 40),
+            SizedBox(height: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                addRadioButton(0, 'One way', context),
+                addRadioButton(1, 'Round trip', context),
+              ],
+            ),
+            SizedBox(height: 20),
             _datePicker(context),
             SizedBox(height: 20),
             Consumer<TaxiProvider>(
@@ -49,16 +69,41 @@ class DashboardScreen extends StatelessWidget {
                   child: TaxiExpansionPanelList(
                     taxiDetails: taxiDetails,
                     showDepartureTime: true,
-                    onTap: (TaxiDetail taxiDetail, String time) {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ReturnTimeScreen(
-                            taxiId: taxiDetail.id,
-                            selectedDepartTime: time,
-                          ),
-                        ),
-                      );
+                    onTap: (TaxiDetail taxiDetail, String time, index) {
+                      List<String> returnTimings = isWeekend
+                          ? taxiDetail.weekEndReturnTiming
+                          : taxiDetail.weekDayReturnTiming;
+
+                      if (returnTimings.length - 1 > index) {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => NewBookingFormScreen(
+                                      isRoundTrip:
+                                          select == "One way" ? false : true,
+                                      selectedDepartTime: time,
+                                      selectedReturnTime: select == "One way"
+                                          ? ""
+                                          : returnTimings[index + 1],
+                                      taxidetails: taxiDetail,
+                                    )));
+                      } else {
+                        final snackBar = SnackBar(
+                          content: Text(
+                              'No return time available,you can choose one way trip to continue'),
+                          backgroundColor: Theme.of(context).errorColor,
+                        );
+                        _scaffoldKey.currentState.showSnackBar(snackBar);
+                      }
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => ReturnTimeScreen(
+                      //       taxiId: taxiDetail.id,
+                      //       selectedDepartTime: time,
+                      //     ),
+                      //   ),
+                      // );
                     },
                   ),
                 );
@@ -68,6 +113,30 @@ class DashboardScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  List gender = ["One way", "Round trip"];
+
+  String select = "Round trip";
+
+  Row addRadioButton(int btnValue, String title, context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: <Widget>[
+        Radio(
+          activeColor: Theme.of(context).primaryColor,
+          value: gender[btnValue],
+          groupValue: select,
+          onChanged: (value) {
+            setState(() {
+              print(value);
+              select = value;
+            });
+          },
+        ),
+        Text(title)
+      ],
     );
   }
 
@@ -93,7 +162,7 @@ class DashboardScreen extends StatelessWidget {
           );
 
           if (selectedDate == null) return;
-
+          print("selected $selectedDate");
           context.read<TaxiProvider>().date = selectedDate;
         },
         child: Card(

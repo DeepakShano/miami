@@ -78,7 +78,7 @@ class ReturnTimeScreen extends StatelessWidget {
                           builder: (context) => NewBookingFormScreen(
                             selectedDepartTime: selectedDepartTime,
                             selectedReturnTime: returnTimings.elementAt(index),
-                            taxiId: taxiId,
+                            taxidetails: taxiDetail,
                           ),
                         ),
                       );

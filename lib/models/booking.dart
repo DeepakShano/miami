@@ -22,6 +22,8 @@ class Booking {
   String returnDepartureStatus;
   String startDepartureStatus;
   String buildVersion;
+  String squareCode;
+  bool isRoundTrip;
 
   static const BOOKING_STATUS_PENDING = 'Pending';
   static const BOOKING_STATUS_REJECTED = 'Rejected';
@@ -52,6 +54,8 @@ class Booking {
     this.returnDepartureStatus,
     this.startDepartureStatus,
     this.buildVersion,
+    this.squareCode,
+    this.isRoundTrip,
   });
 
   Booking.fromJson(Map<String, dynamic> json) {
@@ -59,6 +63,7 @@ class Booking {
     customerName = json['customerName'];
     status = json['status'];
     comment = json['comment'];
+
     tripStartTime = json['tripStartTime'];
     adult = json['adult'];
     bookingDateTimeStamp = json['bookingDateTimeStamp'] == null
@@ -79,6 +84,7 @@ class Booking {
     ticketDepartureSide = json['ticketDepartureSide'];
     returnDepartureStatus = json['returnDepartureStatus'];
     startDepartureStatus = json['startDepartureStatus'];
+    isRoundTrip = json['isRoundTrip'];
     buildVersion = json['buildVersion'];
   }
 
@@ -91,7 +97,7 @@ class Booking {
     adult = json['adult'];
     bookingDateTimeStamp = json['bookingDateTimeStamp'] == null
         ? null
-        : DateTime.fromMillisecondsSinceEpoch(json['bookingDateTimeStamp']);
+        : DateTime.fromMillisecondsSinceEpoch(json['bookingDateTimeStamp']);;
     tripReturnTime = json['tripReturnTime'];
     email = json['email'];
     customerPhone = json['customePhone'];
@@ -108,6 +114,8 @@ class Booking {
     returnDepartureStatus = json['returnDepartureStatus'];
     startDepartureStatus = json['startDepartureStatus'];
     buildVersion = json['buildVersion'];
+    isRoundTrip = json['isRoundTrip'];
+    squareCode = json['squareCode'];
   }
 
   Map<String, dynamic> toJson() {
@@ -135,6 +143,9 @@ class Booking {
     data['returnDepartureStatus'] = this.returnDepartureStatus;
     data['startDepartureStatus'] = this.startDepartureStatus;
     data['buildVersion'] = this.buildVersion;
+    data['isRoundTrip'] = this.isRoundTrip;
+    data['squareCode'] = this.squareCode;
+
     return data;
   }
 
@@ -164,6 +175,8 @@ class Booking {
     data['returnDepartureStatus'] = this.returnDepartureStatus;
     data['startDepartureStatus'] = this.startDepartureStatus;
     data['buildVersion'] = this.buildVersion;
+    data['isRoundTrip'] = this.isRoundTrip;
+    data['squareCode'] = this.squareCode;
 
     return data;
   }

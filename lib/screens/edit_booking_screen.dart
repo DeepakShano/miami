@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +13,7 @@ import '../global.dart';
 class EditBookingFormScreen extends StatefulWidget {
   final Booking booking;
 
+
   EditBookingFormScreen({
     Key key,
     @required this.booking,
@@ -24,6 +26,7 @@ class EditBookingFormScreen extends StatefulWidget {
 class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _formKey = GlobalKey<FormState>();
+  TaxiDetail taxidetails;
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -404,52 +407,56 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
 
     AlertDialog alert = AlertDialog(
       title: Text("Select Departing Time BS"),
-      content: ListView.builder(
-        shrinkWrap: true,
-        itemCount: timingsList.length,
-        itemBuilder: (context, index) {
-          String timingStr = timingsList.elementAt(index);
-          bool canSelect = true;
+      content: Container(
+        height: 400,
+        width: 400,
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: timingsList.length,
+          itemBuilder: (context, index) {
+            String timingStr = timingsList.elementAt(index);
+            bool canSelect = true;
 
-          DateTime now = DateTime.now();
-          DateTime nextDateStart = DateTime(now.year, now.month, now.day);
+            DateTime now = DateTime.now();
+            DateTime nextDateStart = DateTime(now.year, now.month, now.day);
 
-          DateTime dateTimeOfBooking =
-              DateFormat('ddMMMyyy').parse(widget.booking.bookingDate);
+            DateTime dateTimeOfBooking =
+                DateFormat('ddMMMyyy').parse(widget.booking.bookingDate);
 
-          // If booking is of today. Hide/Untappable timings that are in past.
-          if (dateTimeOfBooking.difference(nextDateStart) < Duration(days: 1))
-            try {
-              int h = int.parse(timingStr.split(':').first);
-              int m = int.parse(timingStr.split(':')[1].substring(0, 2));
-              String meridian = timingStr.split(':')[1].substring(3, 5);
+            // If booking is of today. Hide/Untappable timings that are in past.
+            if (dateTimeOfBooking.difference(nextDateStart) < Duration(days: 1))
+              try {
+                int h = int.parse(timingStr.split(':').first);
+                int m = int.parse(timingStr.split(':')[1].substring(0, 2));
+                String meridian = timingStr.split(':')[1].substring(3, 5);
 
-              if (meridian.toLowerCase() == 'pm' && h != 12) {
-                h = h + 12;
+                if (meridian.toLowerCase() == 'pm' && h != 12) {
+                  h = h + 12;
+                }
+
+                TimeOfDay i = TimeOfDay(hour: h, minute: m);
+
+                logger.d(i.toString());
+
+                canSelect = i.compareTo(TimeOfDay.now()) == -1 ? false : true;
+              } catch (e) {
+                logger.e(e);
               }
 
-              TimeOfDay i = TimeOfDay(hour: h, minute: m);
-
-              logger.d(i.toString());
-
-              canSelect = i.compareTo(TimeOfDay.now()) == -1 ? false : true;
-            } catch (e) {
-              logger.e(e);
-            }
-
-          return ListTile(
-            enabled: canSelect,
-            title: Text(
-              timingsList.elementAt(index),
-            ),
-            onTap: !canSelect
-                ? null
-                : () {
-                    _dptTimeController.text = timingsList.elementAt(index);
-                    Navigator.pop(context);
-                  },
-          );
-        },
+            return ListTile(
+              enabled: canSelect,
+              title: Text(
+                timingsList.elementAt(index),
+              ),
+              onTap: !canSelect
+                  ? null
+                  : () {
+                      _dptTimeController.text = timingsList.elementAt(index);
+                      Navigator.pop(context);
+                    },
+            );
+          },
+        ),
       ),
     );
 
@@ -486,52 +493,55 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
 
     AlertDialog alert = AlertDialog(
       title: Text("Select Departing Time MB"),
-      content: ListView.builder(
-        shrinkWrap: true,
-        itemCount: timingsList.length,
-        itemBuilder: (context, index) {
-          String timingStr = timingsList.elementAt(index);
-          bool canSelect = true;
+      content: Container(
+        height: 400,
+        width: 400,
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: timingsList.length,
+          itemBuilder: (context, index) {
+            String timingStr = timingsList.elementAt(index);
+            bool canSelect = true;
 
-          DateTime now = DateTime.now();
-          DateTime nextDateStart = DateTime(now.year, now.month, now.day);
+            DateTime now = DateTime.now();
+            DateTime nextDateStart = DateTime(now.year, now.month, now.day);
 
-          DateTime dateTimeOfBooking =
-              DateFormat('ddMMMyyy').parse(widget.booking.bookingDate);
+            DateTime dateTimeOfBooking =
+                DateFormat('ddMMMyyy').parse(widget.booking.bookingDate);
 
-          // If booking is of today. Hide/Untappable timings that are in past.
-          if (dateTimeOfBooking.difference(nextDateStart) < Duration(days: 1))
-            try {
-              int h = int.parse(timingStr.split(':').first);
-              int m = int.parse(timingStr.split(':')[1].substring(0, 2));
-              String meridian = timingStr.split(':')[1].substring(3, 5);
+            // If booking is of today. Hide/Untappable timings that are in past.
+            if (dateTimeOfBooking.difference(nextDateStart) < Duration(days: 1))
+              try {
+                int h = int.parse(timingStr.split(':').first);
+                int m = int.parse(timingStr.split(':')[1].substring(0, 2));
+                String meridian = timingStr.split(':')[1].substring(3, 5);
 
-              if (meridian.toLowerCase() == 'pm' && h != 12) {
-                h = h + 12;
+                if (meridian.toLowerCase() == 'pm' && h != 12) {
+                  h = h + 12;
+                }
+
+                TimeOfDay i = TimeOfDay(hour: h, minute: m);
+
+                logger.d(i.toString());
+
+                canSelect = i.compareTo(TimeOfDay.now()) == -1 ? false : true;
+              } catch (e) {
+                logger.e(e);
               }
-
-              TimeOfDay i = TimeOfDay(hour: h, minute: m);
-
-              logger.d(i.toString());
-
-              canSelect = i.compareTo(TimeOfDay.now()) == -1 ? false : true;
-            } catch (e) {
-              logger.e(e);
-            }
-
-          return ListTile(
-            enabled: canSelect,
-            title: Text(
-              timingsList.elementAt(index),
-            ),
-            onTap: !canSelect
-                ? null
-                : () {
-                    _returnTimeController.text = timingsList.elementAt(index);
-                    Navigator.pop(context);
-                  },
-          );
-        },
+            return ListTile(
+              enabled: canSelect,
+              title: Text(
+                timingsList.elementAt(index),
+              ),
+              onTap: !canSelect
+                  ? null
+                  : () {
+                      _returnTimeController.text = timingsList.elementAt(index);
+                      Navigator.pop(context);
+                    },
+            );
+          },
+        ),
       ),
     );
 
@@ -571,6 +581,10 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     Booking oldBooking = Booking.fromRealJson(widget.booking.toRealJson());
     Booking newBooking = Booking.fromRealJson(widget.booking.toRealJson());
 
+
+
+
+
     newBooking.customerName = _nameController.text;
     newBooking.customerPhone = _phoneController.text;
     newBooking.email = _emailController.text;
@@ -580,7 +594,7 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     newBooking.minor = _minorCountController.text;
     newBooking.comment = _commentController.text;
 
-    bool hasMinorAdultCountChanged = oldBooking.minor != newBooking.minor ||
+    /*bool hasMinorAdultCountChanged = oldBooking.minor != newBooking.minor ||
         oldBooking.adult != newBooking.adult;
 
     TaxiStats taxiStat = await FirestoreDBService.getTaxiStats(
@@ -673,12 +687,155 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     );
     setState(() => isBtnLoading = false);
 
-    Navigator.pop(context);
+    Navigator.pop(context);*/
+    taxidetails=await FirestoreDBService.getTaxidetails(widget.booking.taxiID);
+
+
+
+    String dptdocId =''
+        '${widget.booking.taxiID}${newBooking.bookingDate}${newBooking.tripStartTime}';
+    print(dptdocId.replaceAll(new RegExp(r"\s+"), ""));
+
+
+    String returndocId =
+        '${widget.booking.taxiID}${newBooking.bookingDate}${newBooking.tripReturnTime}';
+
+    print(returndocId.replaceAll(new RegExp(r"\s+"), ""));
+
+
+    print(taxidetails.toJson());
+    print(widget.booking.ticketID);
+
+    setState(() => isBtnLoading = true);
+
+
+    DocumentReference dptpostRef = FirebaseFirestore.instance.collection(
+        "bookings").doc(dptdocId);
+
+    DocumentReference returnpostRef = FirebaseFirestore.instance.collection(
+        "bookings").doc(returndocId);
+
+
+    var requiresNoOfSeat = int.parse(_adultCountController.text) +
+        int.parse(_minorCountController.text);
+
+    var dptreamainingSeats = 0;
+
+    var returnreamainingSeats = 0;
+
+    await FirebaseFirestore.instance.collection(
+        "bookings").doc(dptdocId).get().asStream().forEach((element) {
+      element
+          .data()
+          ?.values
+          ?.forEach((element) {
+        if (element['status'] != "Cancelled") {
+          dptreamainingSeats +=
+              int.parse(element["adult"]) +
+                  int.parse(element["minor"]);
+        }
+      });
+      print("dpt $dptreamainingSeats");
+
+    });
+    await  FirebaseFirestore.instance.collection(
+        "bookings").doc(returndocId).get().asStream().forEach((element) {
+      element
+          .data()
+          ?.values
+          ?.forEach((element) {
+        if (element['status'] != "Cancelled") {
+          returnreamainingSeats = returnreamainingSeats +
+              int.parse(element["adult"]) +
+              int.parse(element["minor"]);
+        }
+      });
+      print("remaining  $returnreamainingSeats");
+
+    });
+
+    dptreamainingSeats = taxidetails.totalSeats - dptreamainingSeats;
+    returnreamainingSeats =taxidetails.totalSeats - returnreamainingSeats;
+
+
+    print('final dpt remaining tkt $dptreamainingSeats');
+    print('final rtn remaining tkt $returnreamainingSeats');
+
+    if (!(requiresNoOfSeat <= dptreamainingSeats)) {
+      setState(() => isBtnLoading = false);
+      singelTripAlert(dptreamainingSeats);
+      return;
+    }
+    if (widget.booking.isRoundTrip) {
+      if (!(requiresNoOfSeat <= returnreamainingSeats)) {
+        setState(() => isBtnLoading = false);
+        singelTripAlert(returnreamainingSeats);
+        return;
+      }
+    }
+
+
+
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      if(oldBooking.isRoundTrip){
+        if(oldBooking.tripStartTime!=_dptTimeController.text){
+          FirestoreDBService.deleteBooking(oldBooking,'departure');
+          if((dptreamainingSeats > 0 && dptreamainingSeats <  taxidetails.totalSeats )) {
+            transaction.update(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+          }else if (dptreamainingSeats ==  taxidetails.totalSeats  ) {
+            transaction.set(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+          }
+        }else{
+          transaction.update(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+        }
+        if(oldBooking.tripReturnTime!=_returnTimeController.text){
+          FirestoreDBService.deleteBooking(oldBooking,'return');
+          if ((returnreamainingSeats > 0 && returnreamainingSeats <  taxidetails.totalSeats )) {
+            transaction.update(returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
+          }else if(returnreamainingSeats== taxidetails.totalSeats ){
+            transaction.set(returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
+          }
+        }else{
+          transaction.update(returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
+        }
+      }else{
+        if(oldBooking.tripStartTime!=_dptTimeController.text){
+          FirestoreDBService.deleteBooking(oldBooking,'departure');
+          if((dptreamainingSeats > 0 && dptreamainingSeats <  taxidetails.totalSeats )) {
+            transaction.update(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+          }else if (dptreamainingSeats ==  taxidetails.totalSeats  ) {
+            transaction.set(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+          }
+        }else{
+          transaction.update(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+        }
+      }
+
+
+      print(_dptTimeController.text);
+
+      setState(() => isBtnLoading = false);
+
+      Navigator.pop(context);
+    });
+
   }
 
   bool hasTripTimingChanged(Booking oldBooking, Booking newBooking) {
     return oldBooking.tripReturnTime != newBooking.tripReturnTime ||
         oldBooking.tripStartTime != newBooking.tripStartTime;
+  }
+  void singelTripAlert(int dptSeats) {
+    final snackBar = SnackBar(
+      content: Text(
+          'Available seats for'
+              ' ${_dptTimeController.text} is $dptSeats.'),
+      backgroundColor: Theme
+          .of(context)
+          .errorColor,
+    );
+    _scaffoldKey.currentState.showSnackBar(snackBar);
+    return;
   }
 }
 

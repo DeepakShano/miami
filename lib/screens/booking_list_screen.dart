@@ -21,8 +21,8 @@ class BookingListScreen extends StatelessWidget {
           padding: const EdgeInsets.all(8.0),
           child: Column(
             children: [
-              StreamBuilder<List<Booking>>(
-                  stream: FirestoreDBService.streamTickets(
+              FutureBuilder<List<Booking>>(
+                  future: FirestoreDBService.streamTickets(
                       context.watch<AppUserProvider>().appUser.userID),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
@@ -63,10 +63,13 @@ class BookingListScreen extends StatelessWidget {
                             );
                           },
                           onQrTap: () {
+                            String dptdocId =
+                                '${booking.taxiID}${booking.bookingDate}${booking.tripStartTime}';
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => TicketBookedScreen(
+                                    dptdocId: dptdocId,
                                     ticketId: booking.ticketID),
                               ),
                             );
@@ -75,7 +78,7 @@ class BookingListScreen extends StatelessWidget {
                             Widget okButton = FlatButton(
                               child: Text("Delete"),
                               onPressed: () {
-                                FirestoreDBService.deleteBooking(booking);
+                                FirestoreDBService.deleteBooking(booking,'both');
                                 Navigator.pop(context);
                               },
                             );

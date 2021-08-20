@@ -169,7 +169,7 @@ class _ScannerBookingDetailScreenState
           }
 
           return StreamBuilder<Booking>(
-            stream: FirestoreDBService.streamBooking(bookingId),
+            stream: FirestoreDBService.streamBooking(bookingId,""),
             builder: (context, bookingSnapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return Center(
