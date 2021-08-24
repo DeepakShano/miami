@@ -63,8 +63,14 @@ class BookingListScreen extends StatelessWidget {
                             );
                           },
                           onQrTap: () {
-                            String dptdocId =
-                                '${booking.taxiID}${booking.bookingDate}${booking.tripStartTime}';
+                            String dptdocId='';
+                            if(booking.ticketDepartureSide=='Bayside Beach'){
+                              dptdocId='${booking.taxiID}${booking.bookingDate}BS${booking.tripStartTime}';
+
+                            }else{
+                              dptdocId='${booking.taxiID}${booking.bookingDate}MB${booking.tripStartTime}';
+
+                            }
                             Navigator.push(
                               context,
                               MaterialPageRoute(

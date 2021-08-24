@@ -606,13 +606,14 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
       logger.d('Invalid form submission');
       return;
     }
+
     String dptdocId ='${widget.taxidetails.id}${DateFormat('ddMMMyyyy').format(context.read<TaxiProvider>()
-        .date)}${widget.selectedDepartTime}';
+        .date)}BS${widget.selectedDepartTime}';
     print(dptdocId.replaceAll(new RegExp(r"\s+"), ""));
 
 
   String returndocId ='${widget.taxidetails.id}${DateFormat('ddMMMyyyy').format(context.read<TaxiProvider>()
-        .date)}${widget.selectedReturnTime}';
+        .date)}MB${widget.selectedReturnTime}';
     print(returndocId.replaceAll(new RegExp(r"\s+"), ""));
 
     setState(() => isBtnLoading = true);
@@ -672,23 +673,30 @@ class _NewBookingFormScreenState extends State<NewBookingFormScreen> {
           singelTripAlert(returnreamainingSeats);
           return;
         }
+        booking.startDocumentPath=dptdocId;
+        booking.returnDocumentPath=returndocId;
         if((dptreamainingSeats > 0 && dptreamainingSeats <  widget.taxidetails.totalSeats )) {
           transaction.update(dptpostRef, {ticketId: booking.toJson()});
         }else if (dptreamainingSeats ==  widget.taxidetails.totalSeats  ) {
           transaction.set(dptpostRef, {ticketId: booking.toJson()});
         }
         if ((returnreamainingSeats > 0 && returnreamainingSeats <  widget.taxidetails.totalSeats )) {
-            transaction.update(returnpostRef, {ticketId: booking.toJson()});
+
+          transaction.update(returnpostRef, {ticketId: booking.toJson()});
         }else if(returnreamainingSeats== widget.taxidetails.totalSeats ){
+
           transaction.set(returnpostRef, {ticketId: booking.toJson()});
         }
       }else {
+        booking.startDocumentPath=dptdocId;
+        booking.returnDocumentPath="";
         if((dptreamainingSeats > 0 && dptreamainingSeats <  widget.taxidetails.totalSeats )) {
           transaction.update(dptpostRef, {ticketId: booking.toJson()});
         }else if (dptreamainingSeats ==  widget.taxidetails.totalSeats  ) {
           transaction.set(dptpostRef, {ticketId: booking.toJson()});
         }
       }
+
 
       _updateMyView(dptdocId,ticketId);
 
@@ -762,6 +770,8 @@ String _generateTicketId(String username) {
     _scaffoldKey.currentState.showSnackBar(snackBar);
     return;
   }
+
+
 
 
 

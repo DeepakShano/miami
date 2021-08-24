@@ -13,7 +13,6 @@ import '../global.dart';
 class EditBookingFormScreen extends StatefulWidget {
   final Booking booking;
 
-
   EditBookingFormScreen({
     Key key,
     @required this.booking,
@@ -581,10 +580,6 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     Booking oldBooking = Booking.fromRealJson(widget.booking.toRealJson());
     Booking newBooking = Booking.fromRealJson(widget.booking.toRealJson());
 
-
-
-
-
     newBooking.customerName = _nameController.text;
     newBooking.customerPhone = _phoneController.text;
     newBooking.email = _emailController.text;
@@ -688,33 +683,36 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     setState(() => isBtnLoading = false);
 
     Navigator.pop(context);*/
-    taxidetails=await FirestoreDBService.getTaxidetails(widget.booking.taxiID);
-
-
-
-    String dptdocId =''
-        '${widget.booking.taxiID}${newBooking.bookingDate}${newBooking.tripStartTime}';
-    print(dptdocId.replaceAll(new RegExp(r"\s+"), ""));
-
-
-    String returndocId =
-        '${widget.booking.taxiID}${newBooking.bookingDate}${newBooking.tripReturnTime}';
+    taxidetails =
+        await FirestoreDBService.getTaxidetails(widget.booking.taxiID);
+    String dptdocId = "";
+    String returndocId = "";
+    if (widget.booking.ticketDepartureSide == 'Bayside Beach') {
+      dptdocId =
+          '${widget.booking.taxiID}${newBooking.bookingDate}BS${newBooking.tripStartTime}';
+      print(dptdocId.replaceAll(new RegExp(r"\s+"), ""));
+      returndocId =
+          '${widget.booking.taxiID}${newBooking.bookingDate}MB${newBooking.tripReturnTime}';
+    } else {
+      dptdocId =
+          '${widget.booking.taxiID}${newBooking.bookingDate}MB${newBooking.tripStartTime}';
+      print(dptdocId.replaceAll(new RegExp(r"\s+"), ""));
+      returndocId =
+          '${widget.booking.taxiID}${newBooking.bookingDate}BS${newBooking.tripReturnTime}';
+    }
 
     print(returndocId.replaceAll(new RegExp(r"\s+"), ""));
-
 
     print(taxidetails.toJson());
     print(widget.booking.ticketID);
 
     setState(() => isBtnLoading = true);
 
+    DocumentReference dptpostRef =
+        FirebaseFirestore.instance.collection("bookings").doc(dptdocId);
 
-    DocumentReference dptpostRef = FirebaseFirestore.instance.collection(
-        "bookings").doc(dptdocId);
-
-    DocumentReference returnpostRef = FirebaseFirestore.instance.collection(
-        "bookings").doc(returndocId);
-
+    DocumentReference returnpostRef =
+        FirebaseFirestore.instance.collection("bookings").doc(returndocId);
 
     var requiresNoOfSeat = int.parse(_adultCountController.text) +
         int.parse(_minorCountController.text);
@@ -723,27 +721,27 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
 
     var returnreamainingSeats = 0;
 
-    await FirebaseFirestore.instance.collection(
-        "bookings").doc(dptdocId).get().asStream().forEach((element) {
-      element
-          .data()
-          ?.values
-          ?.forEach((element) {
+    await FirebaseFirestore.instance
+        .collection("bookings")
+        .doc(dptdocId)
+        .get()
+        .asStream()
+        .forEach((element) {
+      element.data()?.values?.forEach((element) {
         if (element['status'] != "Cancelled") {
           dptreamainingSeats +=
-              int.parse(element["adult"]) +
-                  int.parse(element["minor"]);
+              int.parse(element["adult"]) + int.parse(element["minor"]);
         }
       });
       print("dpt $dptreamainingSeats");
-
     });
-    await  FirebaseFirestore.instance.collection(
-        "bookings").doc(returndocId).get().asStream().forEach((element) {
-      element
-          .data()
-          ?.values
-          ?.forEach((element) {
+    await FirebaseFirestore.instance
+        .collection("bookings")
+        .doc(returndocId)
+        .get()
+        .asStream()
+        .forEach((element) {
+      element.data()?.values?.forEach((element) {
         if (element['status'] != "Cancelled") {
           returnreamainingSeats = returnreamainingSeats +
               int.parse(element["adult"]) +
@@ -751,88 +749,74 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
         }
       });
       print("remaining  $returnreamainingSeats");
-
     });
 
     dptreamainingSeats = taxidetails.totalSeats - dptreamainingSeats;
-    returnreamainingSeats =taxidetails.totalSeats - returnreamainingSeats;
+    returnreamainingSeats = taxidetails.totalSeats - returnreamainingSeats;
 
+    int oldBookingTotalCount =
+        int.parse(oldBooking.adult) + int.parse(oldBooking.minor);
 
-    print('final dpt remaining tkt $dptreamainingSeats');
-    print('final rtn remaining tkt $returnreamainingSeats');
-
-    if (!(requiresNoOfSeat <= dptreamainingSeats)) {
-      setState(() => isBtnLoading = false);
-      singelTripAlert(dptreamainingSeats);
-      return;
-    }
-    if (widget.booking.isRoundTrip) {
-      if (!(requiresNoOfSeat <= returnreamainingSeats)) {
+    if (oldBookingTotalCount != requiresNoOfSeat) {
+      if (!(requiresNoOfSeat <= (oldBookingTotalCount + dptreamainingSeats))) {
         setState(() => isBtnLoading = false);
-        singelTripAlert(returnreamainingSeats);
+        singelTripAlert(dptreamainingSeats);
         return;
       }
-    }
-
-
-
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      if(oldBooking.isRoundTrip){
-        if(oldBooking.tripStartTime!=_dptTimeController.text){
-          FirestoreDBService.deleteBooking(oldBooking,'departure');
-          if((dptreamainingSeats > 0 && dptreamainingSeats <  taxidetails.totalSeats )) {
-            transaction.update(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
-          }else if (dptreamainingSeats ==  taxidetails.totalSeats  ) {
-            transaction.set(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
-          }
-        }else{
-          transaction.update(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
-        }
-        if(oldBooking.tripReturnTime!=_returnTimeController.text){
-          FirestoreDBService.deleteBooking(oldBooking,'return');
-          if ((returnreamainingSeats > 0 && returnreamainingSeats <  taxidetails.totalSeats )) {
-            transaction.update(returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
-          }else if(returnreamainingSeats== taxidetails.totalSeats ){
-            transaction.set(returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
-          }
-        }else{
-          transaction.update(returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
-        }
-      }else{
-        if(oldBooking.tripStartTime!=_dptTimeController.text){
-          FirestoreDBService.deleteBooking(oldBooking,'departure');
-          if((dptreamainingSeats > 0 && dptreamainingSeats <  taxidetails.totalSeats )) {
-            transaction.update(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
-          }else if (dptreamainingSeats ==  taxidetails.totalSeats  ) {
-            transaction.set(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
-          }
-        }else{
-          transaction.update(dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+      if (widget.booking.isRoundTrip) {
+        if (!(requiresNoOfSeat <=
+            (oldBookingTotalCount + returnreamainingSeats))) {
+          setState(() => isBtnLoading = false);
+          singelTripAlert(returnreamainingSeats);
+          return;
         }
       }
+    } else if ((oldBooking.tripStartTime != _dptTimeController.text) ||
+        (oldBooking.tripReturnTime != _returnTimeController.text)) {
+      if (!(requiresNoOfSeat <= dptreamainingSeats)) {
+        setState(() => isBtnLoading = false);
+        singelTripAlert(dptreamainingSeats);
+        return;
+      }
+      if (widget.booking.isRoundTrip) {
+        if (!(requiresNoOfSeat <= returnreamainingSeats)) {
+          setState(() => isBtnLoading = false);
+          singelTripAlert(returnreamainingSeats);
+          return;
+        }
+      }
+    }
 
+    if(oldBooking.isRoundTrip){
+     await FirestoreDBService.deleteBooking(oldBooking, 'both');
+    }
 
-      print(_dptTimeController.text);
-
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      if (oldBooking.isRoundTrip) {
+        transaction.update(
+            dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+        transaction.update(
+            returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
+      } else {
+        transaction.update(
+            dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+      }
       setState(() => isBtnLoading = false);
 
       Navigator.pop(context);
     });
-
   }
 
   bool hasTripTimingChanged(Booking oldBooking, Booking newBooking) {
     return oldBooking.tripReturnTime != newBooking.tripReturnTime ||
         oldBooking.tripStartTime != newBooking.tripStartTime;
   }
+
   void singelTripAlert(int dptSeats) {
     final snackBar = SnackBar(
-      content: Text(
-          'Available seats for'
-              ' ${_dptTimeController.text} is $dptSeats.'),
-      backgroundColor: Theme
-          .of(context)
-          .errorColor,
+      content: Text('Available seats for'
+          ' ${_dptTimeController.text} is $dptSeats.'),
+      backgroundColor: Theme.of(context).errorColor,
     );
     _scaffoldKey.currentState.showSnackBar(snackBar);
     return;

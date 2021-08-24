@@ -149,7 +149,7 @@ class _TaxiExpansionPanelListState extends State<TaxiExpansionPanelList> {
 
 Future<int> _getRemaingseat(TaxiDetail taxiDetail, String elementAt) async {
     String dptdocId ='${taxiDetail.id}${DateFormat('ddMMMyyyy').format(context.read<TaxiProvider>()
-        .date)}${elementAt}';
+        .date)}BS${elementAt}';
     int count=0;
    // print(dptdocId.replaceAll(new RegExp(r"\s+"), ""));
     await FirebaseFirestore.instance.collection(

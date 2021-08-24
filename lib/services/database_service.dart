@@ -314,23 +314,30 @@ class FirestoreDBService {
         .update({'returnDepartureStatus': status});
   }
 
-  static Future<void> deleteBooking(Booking booking, String condition) {
+  static Future<void> deleteBooking(Booking booking, String condition) async {
 
     String statsDocId;
     if(condition=='both'){
-
-      _deleteFunction('${booking.taxiID}${booking.bookingDate}${booking.tripStartTime}',booking);
-      _deleteFunction('${booking.taxiID}${booking.bookingDate}${booking.tripReturnTime}',booking);
+      if(booking.ticketDepartureSide=='Bayside Beach'){
+       await _deleteFunction('${booking.taxiID}${booking.bookingDate}BS${booking.tripStartTime}',booking);
+        await _deleteFunction('${booking.taxiID}${booking.bookingDate}MB${booking.tripReturnTime}',booking);
+      }else{
+        await _deleteFunction('${booking.taxiID}${booking.bookingDate}MB${booking.tripStartTime}',booking);
+        await _deleteFunction('${booking.taxiID}${booking.bookingDate}BS${booking.tripReturnTime}',booking);
+      }
 
 
     }else if(condition=='departure'){
-       statsDocId =
-          '${booking.taxiID}${booking.bookingDate}${booking.tripStartTime}';
-    }else if(condition=='return'){
-       statsDocId =
-          '${booking.taxiID}${booking.bookingDate}${booking.tripReturnTime}';
+      if(booking.ticketDepartureSide=='Bayside Beach') {
+        statsDocId =
+        '${booking.taxiID}${booking.bookingDate}BS${booking.tripStartTime}';
+      }else{
+        statsDocId =
+        '${booking.taxiID}${booking.bookingDate}MB${booking.tripStartTime}';
+      }
+      await _deleteFunction(statsDocId,booking);
     }
-    _deleteFunction(statsDocId,booking);
+
 
   }
 
@@ -453,6 +460,7 @@ class FirestoreDBService {
         logger.w('Today Stat document does not exist');
         return Future.error('Today stat document does not exist');
       }
+
 
       print(booking.status);
       print(booking.ticketID);

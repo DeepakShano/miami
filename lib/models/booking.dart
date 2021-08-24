@@ -24,7 +24,8 @@ class Booking {
   String buildVersion;
   String squareCode;
   bool isRoundTrip;
-
+  String startDocumentPath;
+  String returnDocumentPath;
   static const BOOKING_STATUS_PENDING = 'Pending';
   static const BOOKING_STATUS_REJECTED = 'Rejected';
   static const BOOKING_STATUS_APPROVED = 'Approved';
@@ -56,6 +57,8 @@ class Booking {
     this.buildVersion,
     this.squareCode,
     this.isRoundTrip,
+    this.startDocumentPath,
+    this.returnDocumentPath,
   });
 
   Booking.fromJson(Map<String, dynamic> json) {
@@ -86,6 +89,8 @@ class Booking {
     startDepartureStatus = json['startDepartureStatus'];
     isRoundTrip = json['isRoundTrip'];
     buildVersion = json['buildVersion'];
+    startDocumentPath=json['startDocumentPath'];
+    returnDocumentPath=json['returnDocumentPath'];
   }
 
   Booking.fromRealJson(Map<String, dynamic> json) {
@@ -116,6 +121,8 @@ class Booking {
     buildVersion = json['buildVersion'];
     isRoundTrip = json['isRoundTrip'];
     squareCode = json['squareCode'];
+    startDocumentPath=json['startDocumentPath'];
+    returnDocumentPath=json['returnDocumentPath'];
   }
 
   Map<String, dynamic> toJson() {
@@ -145,7 +152,8 @@ class Booking {
     data['buildVersion'] = this.buildVersion;
     data['isRoundTrip'] = this.isRoundTrip;
     data['squareCode'] = this.squareCode;
-
+    data['startDocumentPath']=this.startDocumentPath;
+data['returnDocumentPath']=this.returnDocumentPath;
     return data;
   }
 
@@ -177,7 +185,8 @@ class Booking {
     data['buildVersion'] = this.buildVersion;
     data['isRoundTrip'] = this.isRoundTrip;
     data['squareCode'] = this.squareCode;
-
+    data['startDocumentPath']=this.startDocumentPath;
+    data['returnDocumentPath']=this.returnDocumentPath;
     return data;
   }
 }
