@@ -774,18 +774,20 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
           return;
         }
       }
-    } else if ((oldBooking.tripStartTime != _dptTimeController.text) ||
-        (oldBooking.tripReturnTime != _returnTimeController.text)) {
+    }
+    if ((oldBooking.tripStartTime != _dptTimeController.text)) {
       if (!(requiresNoOfSeat <= dptreamainingSeats)) {
         setState(() => isBtnLoading = false);
         singelTripAlert(dptreamainingSeats);
         return;
       }
       if (widget.booking.isRoundTrip) {
-        if (!(requiresNoOfSeat <= returnreamainingSeats)) {
-          setState(() => isBtnLoading = false);
-          singelTripAlert(returnreamainingSeats);
-          return;
+        if((oldBooking.tripReturnTime != _returnTimeController.text)) {
+          if (!(requiresNoOfSeat <= returnreamainingSeats)) {
+            setState(() => isBtnLoading = false);
+            singelTripAlert(returnreamainingSeats);
+            return;
+          }
         }
       }
     }
@@ -800,16 +802,59 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
 
     await FirebaseFirestore.instance.runTransaction((transaction) async {
       newBooking.status=Booking.BOOKING_STATUS_PENDING;
+      String dptdocId="";
+      String returndocId="";
+      if(newBooking.ticketDepartureSide=='Bayside Beach'){
+        dptdocId =
+        '${widget.booking.taxiID}${newBooking.bookingDate}MB${newBooking.tripStartTime}';
+        returndocId =
+        '${widget.booking.taxiID}${newBooking.bookingDate}BS${newBooking.tripReturnTime}';
+      }else {
+        dptdocId =
+        '${widget.booking.taxiID}${newBooking.bookingDate}BS${newBooking.tripStartTime}';
+        returndocId =
+        '${widget.booking.taxiID}${newBooking.bookingDate}MB${newBooking.tripReturnTime}';
+      }
+
+
+     await FirebaseFirestore.instance
+          .collection('bookings')
+          .doc(dptdocId)
+          .get()
+          .then((snapshot){
+       if(snapshot.exists){
+         transaction.update(
+             dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+       }else{
+         transaction.set(
+             dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+       }
+     });
+
+     await FirebaseFirestore.instance
+         .collection('bookings')
+         .doc(returndocId)
+         .get()
+         .then((snapshot){
+       if(snapshot.exists){
+         transaction.update(
+             returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
+       }else{
+         transaction.set(
+             returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
+       }
+     } );
+
+     /*
       if (oldBooking.isRoundTrip) {
           transaction.update(
               dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
-          transaction.update(
-              returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
+
       } else {
 
         transaction.update(
             dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
-      }
+      }*/
       setState(() => isBtnLoading = false);
 
       Navigator.pop(context);
