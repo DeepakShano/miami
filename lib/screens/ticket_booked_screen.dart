@@ -71,15 +71,15 @@ class _TicketBookedScreenState extends State<TicketBookedScreen> {
               return Center(
                 child: CircularProgressIndicator(),
               );
-            } else if (snapshot.hasError) {
-              if(snapshot.hasData){
-                return Container();
-              }else {
-                return Center(
-                  child: Text(
-                      'Something went wrong Please try again after some time'),
-                );
-              }
+            } else if (!snapshot.hasData) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }else if(snapshot.hasError){
+              return Center(
+                child: Text(
+                    'Something went wrong Please try again after some time'),
+              );
             }
 
             booking = snapshot.data;

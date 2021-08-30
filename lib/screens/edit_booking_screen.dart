@@ -242,8 +242,10 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
             textInputAction: TextInputAction.next,
             onEditingComplete: () => node.nextFocus(),
             validator: (value) {
-              if (value.isEmpty) {
-                return 'This field cannot be empty';
+              if(!widget.booking.returnDocumentPath.isEmpty) {
+                if (value.isEmpty) {
+                  return 'This field cannot be empty';
+                }
               }
               return null;
             },
@@ -563,14 +565,15 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     }
 
     String departureTimeFieldError = await validateDepartureTextField();
-    String returnTimeFieldError = await validateReturnTextField();
+      String returnTimeFieldError = await validateReturnTextField();
+
 
     if (departureTimeFieldError != null) {
       return _scaffoldKey.currentState.showSnackBar(SnackBar(
         content: Text(departureTimeFieldError),
         backgroundColor: Theme.of(context).errorColor,
       ));
-    } else if (returnTimeFieldError != null) {
+    } else if (widget.booking.returnDocumentPath.isNotEmpty&&returnTimeFieldError != null) {
       return _scaffoldKey.currentState.showSnackBar(SnackBar(
         content: Text(returnTimeFieldError),
         backgroundColor: Theme.of(context).errorColor,
@@ -787,17 +790,23 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
       }
     }
 
-    if(oldBooking.isRoundTrip){
-     await FirestoreDBService.deleteBooking(oldBooking, 'both');
+    if(hasTripTimingChanged(widget.booking,newBooking)){
+      if(oldBooking.isRoundTrip) {
+        await FirestoreDBService.deleteBooking(oldBooking, 'both');
+      }else{
+        await FirestoreDBService.deleteBooking(oldBooking, 'departure');
+      }
     }
 
     await FirebaseFirestore.instance.runTransaction((transaction) async {
+      newBooking.status=Booking.BOOKING_STATUS_PENDING;
       if (oldBooking.isRoundTrip) {
-        transaction.update(
-            dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
-        transaction.update(
-            returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
+          transaction.update(
+              dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
+          transaction.update(
+              returnpostRef, {widget.booking.ticketID: newBooking.toJson()});
       } else {
+
         transaction.update(
             dptpostRef, {widget.booking.ticketID: newBooking.toJson()});
       }
