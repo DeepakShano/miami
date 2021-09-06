@@ -1,4 +1,4 @@
-package com.water_taxi_miami
+package com.watertaximiami
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -592,6 +592,8 @@ class _EditBookingFormScreenState extends State<EditBookingFormScreen> {
     newBooking.minor = _minorCountController.text;
     newBooking.comment = _commentController.text;
 
+
+
     /*bool hasMinorAdultCountChanged = oldBooking.minor != newBooking.minor ||
         oldBooking.adult != newBooking.adult;
 

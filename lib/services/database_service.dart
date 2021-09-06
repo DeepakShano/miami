@@ -281,7 +281,7 @@ class FirestoreDBService {
         });
       }
 
-      bookings
+    bookings=  bookings
           .where((element) =>
               element.bookingAgentID == agentId &&
               element.status != Booking.BOOKING_STATUS_CANCELLED)
